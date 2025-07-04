@@ -22,7 +22,7 @@ cd cyberdash && pnpm install
 docker compose up -d
 
 # Setup and run
-cd cyberDash/apps/web
+cd /apps/web
 pnpm db:push && pnpm dev
 ```
 
