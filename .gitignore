@@ -1,36 +1,85 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Dependencies
+# =============================================================================
+# Dependencies & Caches
+# =============================================================================
+# Lockfiles should be committed (pnpm-lock.yaml, package-lock.json, yarn.lock)
 node_modules
 .pnp
 .pnp.js
+.pnpm-store
 
-# Local env files
+# =============================================================================
+# Local Environment & Secrets
+# =============================================================================
+# Ignore all local environment files.
+# Use .env.example for template files and commit that instead.
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
 
-# Testing
-coverage
+# Ignore sensitive certificate files
+*.pem
+*.key
 
-# Turbo
-.turbo
-
-# Vercel
-.vercel
-
-# Build Outputs
+# =============================================================================
+# Build & Compilation Outputs
+# =============================================================================
+# Next.js
 .next/
 out/
+
+# General
 build
 dist
+.vercel
 
+# =============================================================================
+# Caching & Logs
+# =============================================================================
+# Turborepo cache
+.turbo
 
-# Debug
+# General logs
+*.log
+*.log*
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# Misc
+# =============================================================================
+# Testing
+# =============================================================================
+coverage
+.nyc_output
+
+# =============================================================================
+# IDE & Editor Specific
+# =============================================================================
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains (WebStorm, etc.)
+.idea
+
+# =============================================================================
+# OS Specific
+# =============================================================================
+# macOS
 .DS_Store
-*.pem
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+.vercel

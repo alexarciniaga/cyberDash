@@ -10,6 +10,8 @@ import { DateRangeProvider } from "@/contexts/date-range-context";
 import { EditableTitle } from "@/components/editable-title";
 import { EditableDescription } from "@/components/editable-description";
 import { CreateDashboardModal } from "@/components/create-dashboard-modal";
+import { RefreshButton } from "@/components/refresh-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { DashboardLayout, WidgetConfig, GridLayoutItem } from "@/lib/types";
 import {
@@ -19,6 +21,7 @@ import {
   useUpdateDashboard,
   useDeleteDashboard,
 } from "@/lib/hooks/use-dashboards";
+import { useDashboardRefresh } from "@/lib/hooks/use-dashboard-refresh";
 import { PlusIcon, RotateCcwIcon, BookOpenIcon } from "lucide-react";
 import { getWidgetSize, generateSmartLayout } from "@/lib/widget-library-data";
 
@@ -264,6 +267,7 @@ function PageContent() {
   const createDashboard = useCreateDashboard();
   const updateDashboard = useUpdateDashboard();
   const deleteDashboard = useDeleteDashboard();
+  const { refresh, isRefreshing, timeUntilNext } = useDashboardRefresh();
 
   const [currentDashboard, setCurrentDashboard] = React.useState<
     DashboardLayout | undefined
@@ -697,6 +701,15 @@ function PageContent() {
                   )}
                 </div>
                 <div className="flex-shrink-0 flex gap-2">
+                  {currentDashboard && (
+                    <RefreshButton
+                      onRefresh={refresh}
+                      isRefreshing={isRefreshing}
+                      timeUntilNext={timeUntilNext}
+                      className="h-9"
+                    />
+                  )}
+                  <ThemeToggle />
                   <Button
                     variant="ghost"
                     size="sm"
@@ -769,6 +782,15 @@ function PageContent() {
                 </div>
                 <div className="flex items-start gap-4">
                   <DateRangePicker />
+                  {currentDashboard && (
+                    <RefreshButton
+                      onRefresh={refresh}
+                      isRefreshing={isRefreshing}
+                      timeUntilNext={timeUntilNext}
+                      className="h-9"
+                    />
+                  )}
+                  <ThemeToggle />
                   <Button
                     variant="ghost"
                     size="sm"
