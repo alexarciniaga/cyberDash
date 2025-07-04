@@ -17,37 +17,37 @@ const WIDGET_LIBRARY = {
             id: "cisa-kev-count",
             type: "metric_card",
             dataSource: "cisa",
-            metricId: "total_count",
+            metricId: "total-count",
         },
         {
             id: "cisa-top-vendor",
             type: "metric_card",
             dataSource: "cisa",
-            metricId: "top_vendor",
+            metricId: "top-vendor",
         },
         {
             id: "cisa-due-date-compliance",
             type: "metric_card",
             dataSource: "cisa",
-            metricId: "due_date_compliance",
+            metricId: "due-date-compliance",
         },
         {
             id: "cisa-vendor-breakdown",
             type: "table",
             dataSource: "cisa",
-            metricId: "vendor_breakdown",
+            metricId: "vendor-breakdown",
         },
         {
             id: "cisa-new-vulns-rate",
             type: "chart",
             dataSource: "cisa",
-            metricId: "new_vulns_rate",
+            metricId: "new-vulns-rate",
         },
         {
             id: "cisa-product-distribution",
             type: "list",
             dataSource: "cisa",
-            metricId: "product_distribution",
+            metricId: "product-distribution",
         },
     ],
     "NVD CVE": [
@@ -55,31 +55,31 @@ const WIDGET_LIBRARY = {
             id: "nvd-critical-count",
             type: "metric_card",
             dataSource: "nvd",
-            metricId: "critical_count",
+            metricId: "critical-count",
         },
         {
             id: "nvd-publication-trends",
             type: "chart",
             dataSource: "nvd",
-            metricId: "publication_trends",
+            metricId: "publication-trends",
         },
         {
             id: "nvd-severity-distribution",
             type: "table",
             dataSource: "nvd",
-            metricId: "severity_distribution",
+            metricId: "severity-distribution",
         },
         {
             id: "nvd-recent-high-severity",
             type: "list",
             dataSource: "nvd",
-            metricId: "recent_high_severity",
+            metricId: "recent-high-severity",
         },
         {
             id: "nvd-vuln-status-summary",
             type: "chart",
             dataSource: "nvd",
-            metricId: "vuln_status_summary",
+            metricId: "vuln-status-summary",
         },
     ],
     "MITRE ATT&CK": [
@@ -87,31 +87,31 @@ const WIDGET_LIBRARY = {
             id: "mitre-technique-count",
             type: "metric_card",
             dataSource: "mitre",
-            metricId: "technique_count",
+            metricId: "technique-count",
         },
         {
             id: "mitre-tactics-coverage",
             type: "table",
             dataSource: "mitre",
-            metricId: "tactics_coverage",
+            metricId: "tactics-coverage",
         },
         {
             id: "mitre-platform-coverage",
             type: "table",
             dataSource: "mitre",
-            metricId: "platform_coverage",
+            metricId: "platform-coverage",
         },
         {
             id: "mitre-recent-updates",
             type: "list",
             dataSource: "mitre",
-            metricId: "recent_updates",
+            metricId: "recent-updates",
         },
         {
             id: "mitre-top-techniques",
             type: "list",
             dataSource: "mitre",
-            metricId: "top_techniques",
+            metricId: "top-techniques",
         },
     ],
 };
@@ -213,4 +213,4 @@ if (require.main === module) {
     verifyWidgetLibrary();
 }
 
-module.exports = { verifyWidgetLibrary }; 
+module.exports = { verifyWidgetLibrary };

@@ -78,10 +78,18 @@
     transition: all 200ms ease;
     transition-property: left, top;
     position: absolute;
+    overflow: hidden; /* Prevent content from overflowing grid boundaries */
   }
 
   .react-grid-item.cssTransforms {
     transition-property: transform;
+  }
+
+  /* Ensure widget content respects container boundaries */
+  .react-grid-item > * {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
   }
 
   .react-grid-item > .react-resizable-handle {

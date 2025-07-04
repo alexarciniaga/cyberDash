@@ -68,7 +68,7 @@ const defaultDashboardTemplate = {
       title: "CISA KEV Total",
       description: "Known Exploited Vulnerabilities",
       dataSource: "cisa",
-      metricId: "total_count",
+      metricId: "total-count",
       refreshInterval: getRefreshInterval("normal"),
     },
     {
@@ -77,7 +77,7 @@ const defaultDashboardTemplate = {
       title: "Top Vendor",
       description: "Most vulnerable vendor",
       dataSource: "cisa",
-      metricId: "top_vendor",
+      metricId: "top-vendor",
       refreshInterval: getRefreshInterval("fast"),
     },
     {
@@ -86,7 +86,7 @@ const defaultDashboardTemplate = {
       title: "Vendor Leaderboard",
       description: "Top vendors by vulnerability count",
       dataSource: "cisa",
-      metricId: "vendor_breakdown",
+      metricId: "vendor-breakdown",
       refreshInterval: getRefreshInterval("slow"),
     },
     {
@@ -95,7 +95,7 @@ const defaultDashboardTemplate = {
       title: "Due Date Compliance",
       description: "Percentage of vulnerabilities not approaching due date",
       dataSource: "cisa",
-      metricId: "due_date_compliance",
+      metricId: "due-date-compliance",
       refreshInterval: getRefreshInterval("fast"),
     },
     {
@@ -104,7 +104,7 @@ const defaultDashboardTemplate = {
       title: "Vendor Breakdown",
       description: "Vulnerabilities by vendor",
       dataSource: "cisa",
-      metricId: "vendor_breakdown",
+      metricId: "vendor-breakdown",
       refreshInterval: getRefreshInterval("slow"),
     },
     {
@@ -113,7 +113,7 @@ const defaultDashboardTemplate = {
       title: "New Vulnerabilities Rate",
       description: "Rate of new vulnerabilities over time",
       dataSource: "cisa",
-      metricId: "new_vulns_rate",
+      metricId: "new-vulns-rate",
       refreshInterval: getRefreshInterval("normal"),
     },
     {
@@ -122,7 +122,7 @@ const defaultDashboardTemplate = {
       title: "Product Distribution",
       description: "Distribution of vulnerabilities by product",
       dataSource: "cisa",
-      metricId: "product_distribution",
+      metricId: "product-distribution",
       chartType: "pie",
       refreshInterval: getRefreshInterval("slow"),
     },
@@ -133,7 +133,7 @@ const defaultDashboardTemplate = {
       title: "Critical CVEs",
       description: "CVSS Score ≥ 9.0",
       dataSource: "nvd",
-      metricId: "critical_count",
+      metricId: "critical-count",
       refreshInterval: getRefreshInterval("fast"),
     },
     {
@@ -142,7 +142,7 @@ const defaultDashboardTemplate = {
       title: "CVE Publication Trends",
       description: "CVEs published over time",
       dataSource: "nvd",
-      metricId: "publication_trends",
+      metricId: "publication-trends",
       refreshInterval: getRefreshInterval("normal"),
     },
     {
@@ -151,7 +151,7 @@ const defaultDashboardTemplate = {
       title: "Severity Distribution",
       description: "CVEs by CVSS severity levels",
       dataSource: "nvd",
-      metricId: "severity_distribution",
+      metricId: "severity-distribution",
       refreshInterval: getRefreshInterval("slow"),
     },
     {
@@ -160,7 +160,7 @@ const defaultDashboardTemplate = {
       title: "Recent High Severity",
       description: "Recently published high severity CVEs",
       dataSource: "nvd",
-      metricId: "recent_high_severity",
+      metricId: "recent-high-severity",
       refreshInterval: getRefreshInterval("fast"),
     },
     {
@@ -169,7 +169,7 @@ const defaultDashboardTemplate = {
       title: "Vulnerability Status Summary",
       description: "Summary of vulnerability statuses",
       dataSource: "nvd",
-      metricId: "vuln_status_summary",
+      metricId: "vuln-status-summary",
       refreshInterval: getRefreshInterval("normal"),
     },
     // MITRE ATT&CK Widgets
@@ -179,7 +179,7 @@ const defaultDashboardTemplate = {
       title: "ATT&CK Techniques",
       description: "Total techniques in framework",
       dataSource: "mitre",
-      metricId: "technique_count",
+      metricId: "technique-count",
       refreshInterval: getRefreshInterval("hourly"),
     },
     {
@@ -188,7 +188,7 @@ const defaultDashboardTemplate = {
       title: "MITRE Tactics Coverage",
       description: "ATT&CK tactics and technique counts",
       dataSource: "mitre",
-      metricId: "tactics_coverage",
+      metricId: "tactics-coverage",
       refreshInterval: getRefreshInterval("slow"),
     },
     {
@@ -197,7 +197,7 @@ const defaultDashboardTemplate = {
       title: "Platform Coverage",
       description: "ATT&CK technique coverage by platform",
       dataSource: "mitre",
-      metricId: "platform_coverage",
+      metricId: "platform-coverage",
       refreshInterval: getRefreshInterval("slow"),
     },
     {
@@ -206,7 +206,7 @@ const defaultDashboardTemplate = {
       title: "Recent Framework Updates",
       description: "Latest MITRE ATT&CK technique updates and additions",
       dataSource: "mitre",
-      metricId: "recent_updates",
+      metricId: "recent-updates",
       refreshInterval: getRefreshInterval("slow"),
     },
     {
@@ -215,7 +215,7 @@ const defaultDashboardTemplate = {
       title: "Most Versatile Techniques",
       description: "Techniques spanning multiple tactics and platforms",
       dataSource: "mitre",
-      metricId: "top_techniques",
+      metricId: "top-techniques",
       refreshInterval: getRefreshInterval("slow"),
     },
   ],

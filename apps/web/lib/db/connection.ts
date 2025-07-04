@@ -13,9 +13,10 @@ if (!connectionString) {
 
 // Create postgres connection
 const client = postgres(connectionString, {
-  max: 1,
+  max: 10,
   idle_timeout: 20,
-  connect_timeout: 10,
+  connect_timeout: 30,
+  max_lifetime: 60 * 30, // 30 minutes
 });
 
 // Create drizzle instance

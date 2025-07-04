@@ -10,16 +10,18 @@ const UpdateDashboardSchema = z.object({
   description: z.string().optional(),
   isDefault: z.boolean().optional(),
   layout: z
-    .array(
-      z.object({
-        i: z.string(),
-        x: z.number(),
-        y: z.number(),
-        w: z.number(),
-        h: z.number(),
-        minW: z.number().optional(),
-        minH: z.number().optional(),
-      })
+    .record(
+      z.array(
+        z.object({
+          i: z.string(),
+          x: z.number(),
+          y: z.number(),
+          w: z.number(),
+          h: z.number(),
+          minW: z.number().optional(),
+          minH: z.number().optional(),
+        })
+      )
     )
     .optional(),
   widgets: z
@@ -32,6 +34,7 @@ const UpdateDashboardSchema = z.object({
         dataSource: z.enum(["cisa", "nvd", "mitre"]),
         metricId: z.string().optional(),
         refreshInterval: z.number().optional(),
+        chartType: z.enum(["line", "bar", "pie"]).optional(),
         settings: z.record(z.any()).optional(),
       })
     )
@@ -42,12 +45,13 @@ const UpdateDashboardSchema = z.object({
 // Widget configuration schema
 const WidgetConfigSchema = z.object({
   id: z.string(),
-  type: z.enum(["metric_card", "chart", "table", "list"]),
+  type: z.enum(["metric_card", "chart", "table", "list", "vendor_card"]),
   title: z.string(),
   description: z.string().optional(),
   dataSource: z.enum(["cisa", "nvd", "mitre"]),
   metricId: z.string().optional(),
   refreshInterval: z.number().optional(),
+  chartType: z.enum(["line", "bar", "pie"]).optional(),
   settings: z.record(z.any()).optional(),
 });
 

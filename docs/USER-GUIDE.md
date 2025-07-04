@@ -50,74 +50,86 @@ CyberDash supports 5 distinct widget types:
 ### 🚨 CISA KEV Widgets (7 widgets)
 
 #### Total CISA KEV Vulnerabilities (`cisa-kev-count`)
+
 - **Type**: Metric Card | **Refresh**: 60s
 - **Shows**: Current count of actively exploited vulnerabilities
 - **Interpret**: Higher = more active threats in circulation
 - **Action**: Use as baseline for threat awareness and patching priority
 
 #### Top Vendor (`cisa-top-vendor`)
-- **Type**: Vendor Card | **Refresh**: 30s  
+
+- **Type**: Vendor Card | **Refresh**: 30s
 - **Shows**: Vendor with most exploited vulnerabilities and count
 - **Interpret**: Microsoft, Adobe, Apple often lead due to widespread use
 - **Action**: Focus patching efforts on high-risk vendors
 
 #### Vendor Leaderboard (`cisa-vendor-leaderboard`)
+
 - **Type**: List | **Refresh**: 5min
 - **Shows**: Top 10 vendors ranked by vulnerability count
 - **Interpret**: Comprehensive view of vendor risk landscape
 - **Action**: Use for vendor risk assessment and strategic planning
 
 #### Due Date Compliance (`cisa-due-date-compliance`)
+
 - **Type**: Metric Card | **Refresh**: 30s
 - **Shows**: Percentage of vulnerabilities not approaching CISA due dates
 - **Interpret**: Lower percentages = more urgent vulnerabilities need attention
 - **Action**: Use CISA deadlines as guidance for your patching timeline
 
 #### Vendor Breakdown Table (`cisa-vendor-breakdown`)
+
 - **Type**: Table | **Refresh**: 5min
 - **Shows**: Complete vendor vulnerability breakdown with detailed counts
 - **Interpret**: Sortable view of all vendor vulnerabilities
 - **Action**: Detailed analysis and prioritization by vendor
 
 #### New Vulnerabilities Rate (`cisa-new-vulns-rate`)
+
 - **Type**: Chart | **Refresh**: 60s
 - **Shows**: Time series of new vulnerabilities added over time
 - **Interpret**: Spikes = surge in new threats requiring immediate attention
 - **Action**: High rates may indicate need for emergency patching procedures
 
 #### Product Distribution (`cisa-product-distribution`)
-- **Type**: Chart | **Refresh**: 5min
+
+- **Type**: Bar Chart | **Refresh**: 5min
 - **Shows**: Distribution of vulnerabilities by specific products
-- **Interpret**: Identifies most vulnerable product categories
+- **Interpret**: Identifies most vulnerable product categories with clear comparison
 - **Action**: Focus patching on high-vulnerability products
 
 ### 🔒 NVD CVE Widgets (5 widgets)
 
 #### Critical CVE Count (`nvd-cve-critical`)
+
 - **Type**: Metric Card | **Refresh**: 30s
 - **Shows**: Vulnerabilities with CVSS score ≥ 9.0 (highest severity)
 - **Interpret**: Critical = requires immediate patching
 - **Action**: Treat as highest priority for security teams
 
 #### CVE Publication Trends (`nvd-publication-trends`)
+
 - **Type**: Chart | **Refresh**: 60s
 - **Shows**: New vulnerabilities published over time
 - **Interpret**: Spikes may indicate major disclosure events
 - **Action**: Plan security capacity around high-volume periods
 
 #### Severity Distribution (`nvd-severity-distribution`)
+
 - **Type**: Table | **Refresh**: 5min
 - **Shows**: Complete breakdown by CVSS severity levels with statistics
 - **Interpret**: Most vulnerabilities are Medium/High - this is normal
 - **Action**: Allocate patching resources proportionally, focus on Critical/High first
 
 #### Recent High Severity CVEs (`nvd-recent-high-severity`)
+
 - **Type**: List | **Refresh**: 30s
 - **Shows**: Latest Critical and High severity vulnerabilities with descriptions
 - **Interpret**: Immediate threats requiring rapid response
 - **Action**: Quick triage and emergency patching assessment
 
 #### Vulnerability Status Summary (`nvd-vuln-status-summary`)
+
 - **Type**: Table | **Refresh**: 60s
 - **Shows**: CVE status distribution (Analyzed, Modified, Awaiting Analysis, etc.)
 - **Interpret**: Processing state of vulnerability database
@@ -126,30 +138,35 @@ CyberDash supports 5 distinct widget types:
 ### ⚔️ MITRE ATT&CK Widgets (5 widgets)
 
 #### Total ATT&CK Techniques (`mitre-technique-count`)
+
 - **Type**: Metric Card | **Refresh**: 1hr
 - **Shows**: Number of known attack techniques in the framework
 - **Interpret**: Growing numbers = expanding threat landscape complexity
 - **Action**: Use for security control coverage assessment
 
 #### MITRE Tactics Coverage (`mitre-tactics-coverage`)
+
 - **Type**: Table | **Refresh**: 5min
 - **Shows**: Attack techniques grouped by tactics (phases of attack)
 - **Interpret**: Tactics with many techniques = areas where attackers have many options
 - **Action**: Ensure security controls cover all tactics, especially high-technique ones
 
 #### Platform Coverage (`mitre-platform-coverage`)
+
 - **Type**: Table | **Refresh**: 5min
 - **Shows**: Technique coverage across Windows, Linux, macOS, Cloud platforms
 - **Interpret**: Windows typically highest due to enterprise prevalence
 - **Action**: Focus on platforms actually used in your environment
 
 #### Recent Framework Updates (`mitre-recent-updates`)
+
 - **Type**: List | **Refresh**: 5min
 - **Shows**: Latest MITRE ATT&CK technique updates and additions
 - **Interpret**: New techniques = evolving attack landscape
 - **Action**: Update security controls to address new techniques
 
 #### Most Versatile Techniques (`mitre-top-techniques`)
+
 - **Type**: List | **Refresh**: 5min
 - **Shows**: Techniques spanning multiple tactics and platforms
 - **Interpret**: High-impact techniques used across attack stages
@@ -169,12 +186,14 @@ Navigate to `/settings` or click the settings icon to access:
 ### System Health Dashboard
 
 **Real-time monitoring of:**
+
 - Database connectivity status
 - Schema readiness
 - Table integrity checks
 - Last health check timestamp
 
 **Status indicators:**
+
 - 🟢 **Healthy** - All systems operational
 - 🟡 **Warning** - Minor issues detected
 - 🔴 **Unhealthy** - Critical issues require attention
@@ -184,21 +203,25 @@ Navigate to `/settings` or click the settings icon to access:
 **Trigger fresh data loads:**
 
 #### CISA KEV Ingestion
+
 - **Source**: CISA Known Exploited Vulnerabilities Catalog
 - **Frequency**: Updates when CISA releases new data
 - **Shows**: Records processed, added, updated, catalog version
 
-#### NVD CVE Ingestion  
+#### NVD CVE Ingestion
+
 - **Source**: NIST National Vulnerability Database
 - **Frequency**: Continuous updates as CVEs are published
 - **Shows**: Records processed, date range, processing duration
 
 #### MITRE ATT&CK Ingestion
+
 - **Source**: MITRE ATT&CK Framework
 - **Frequency**: Framework updates (monthly/quarterly)
 - **Shows**: Techniques and tactics processed, framework version
 
 **Ingestion Status Tracking:**
+
 - Real-time progress indicators
 - Detailed results with record counts
 - Error reporting and troubleshooting

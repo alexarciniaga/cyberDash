@@ -10,11 +10,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  useDateRange,
-  DateRangePreset,
-  getDateRangeDescription,
-} from "@/contexts/date-range-context";
+import { useDateRange } from "@/contexts/app-context";
+
+export type DateRangePreset = "24h" | "7d" | "30d" | "90d";
 import { cn } from "@/lib/ui-utils";
 
 const presetOptions: Array<{
@@ -26,11 +24,6 @@ const presetOptions: Array<{
   { value: "7d", label: "Last 7 Days", description: "Past week" },
   { value: "30d", label: "Last 30 Days", description: "Past month" },
   { value: "90d", label: "Last 90 Days", description: "Past quarter" },
-  {
-    value: "custom",
-    label: "Custom Range",
-    description: "Select specific dates",
-  },
 ];
 
 interface DateRangePickerProps {
@@ -39,61 +32,13 @@ interface DateRangePickerProps {
 
 export const DateRangePicker = React.memo<DateRangePickerProps>(
   function DateRangePicker({ className }) {
-    const { dateRange, preset, setPreset, setDateRange, isCustomRange } =
-      useDateRange();
-    const [showCustomInputs, setShowCustomInputs] = React.useState(false);
-    const [customFrom, setCustomFrom] = React.useState("");
-    const [customTo, setCustomTo] = React.useState("");
-
-    // Update custom inputs when date range changes
-    React.useEffect(() => {
-      if (isCustomRange) {
-        setCustomFrom(formatDateForInput(dateRange.from));
-        setCustomTo(formatDateForInput(dateRange.to));
-      }
-    }, [dateRange, isCustomRange]);
+    const { preset, setPreset } = useDateRange();
 
     const handlePresetChange = React.useCallback(
       (newPreset: DateRangePreset) => {
-        if (newPreset === "custom") {
-          setShowCustomInputs(true);
-        } else {
-          setShowCustomInputs(false);
-        }
         setPreset(newPreset);
       },
       [setPreset]
-    );
-
-    const handleCustomDateChange = React.useCallback(() => {
-      if (customFrom && customTo) {
-        const fromDate = new Date(customFrom);
-        const toDate = new Date(customTo);
-
-        // Validate dates
-        if (
-          !isNaN(fromDate.getTime()) &&
-          !isNaN(toDate.getTime()) &&
-          fromDate <= toDate
-        ) {
-          setDateRange({ from: fromDate, to: toDate });
-        }
-      }
-    }, [customFrom, customTo, setDateRange]);
-
-    // Memoized handlers for custom inputs
-    const handleCustomFromChange = React.useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCustomFrom(e.target.value);
-      },
-      []
-    );
-
-    const handleCustomToChange = React.useCallback(
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        setCustomTo(e.target.value);
-      },
-      []
     );
 
     const currentPreset = React.useMemo(
@@ -142,35 +87,6 @@ export const DateRangePicker = React.memo<DateRangePickerProps>(
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-
-        {/* Custom Date Inputs */}
-        {showCustomInputs && isCustomRange && (
-          <div className="space-y-3 p-3 border rounded-md bg-muted/30">
-            <div className="text-sm font-medium">Custom Date Range</div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">From</label>
-                <Input
-                  type="datetime-local"
-                  value={customFrom}
-                  onChange={handleCustomFromChange}
-                  onBlur={handleCustomDateChange}
-                  className="h-8 text-xs"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">To</label>
-                <Input
-                  type="datetime-local"
-                  value={customTo}
-                  onChange={handleCustomToChange}
-                  onBlur={handleCustomDateChange}
-                  className="h-8 text-xs"
-                />
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }

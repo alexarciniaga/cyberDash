@@ -30,11 +30,11 @@ export const cisaKev = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => ({
-    cveIdIdx: index("cisa_kev_cve_id_idx").on(table.cveID),
-    dateAddedIdx: index("cisa_kev_date_added_idx").on(table.dateAdded),
-    vendorIdx: index("cisa_kev_vendor_idx").on(table.vendorProject),
-  })
+  (table) => [
+    index("cisa_kev_cve_id_idx").on(table.cveID),
+    index("cisa_kev_date_added_idx").on(table.dateAdded),
+    index("cisa_kev_vendor_idx").on(table.vendorProject),
+  ]
 );
 
 // NVD CVE Data
@@ -67,12 +67,12 @@ export const nvdCve = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => ({
-    cveIdIdx: index("nvd_cve_cve_id_idx").on(table.cveID),
-    publishedIdx: index("nvd_cve_published_idx").on(table.published),
-    baseScoreIdx: index("nvd_cve_base_score_idx").on(table.cvssV3BaseScore),
-    severityIdx: index("nvd_cve_severity_idx").on(table.cvssV3BaseSeverity),
-  })
+  (table) => [
+    index("nvd_cve_cve_id_idx").on(table.cveID),
+    index("nvd_cve_published_idx").on(table.published),
+    index("nvd_cve_base_score_idx").on(table.cvssV3BaseScore),
+    index("nvd_cve_severity_idx").on(table.cvssV3BaseSeverity),
+  ]
 );
 
 // MITRE ATT&CK Techniques
@@ -106,11 +106,11 @@ export const mitreAttackTechniques = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => ({
-    techniqueIdIdx: index("mitre_technique_id_idx").on(table.techniqueId),
-    nameIdx: index("mitre_technique_name_idx").on(table.name),
-    lastModifiedIdx: index("mitre_last_modified_idx").on(table.lastModified),
-  })
+  (table) => [
+    index("mitre_technique_id_idx").on(table.techniqueId),
+    index("mitre_technique_name_idx").on(table.name),
+    index("mitre_last_modified_idx").on(table.lastModified),
+  ]
 );
 
 // MITRE ATT&CK Tactics
@@ -133,10 +133,10 @@ export const mitreAttackTactics = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => ({
-    tacticIdIdx: index("mitre_tactic_id_idx").on(table.tacticId),
-    nameIdx: index("mitre_tactic_name_idx").on(table.name),
-  })
+  (table) => [
+    index("mitre_tactic_id_idx").on(table.tacticId),
+    index("mitre_tactic_name_idx").on(table.name),
+  ]
 );
 
 // Data ingestion tracking
@@ -155,11 +155,11 @@ export const dataIngestionLog = pgTable(
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => ({
-    sourceIdx: index("ingestion_source_idx").on(table.source),
-    statusIdx: index("ingestion_status_idx").on(table.status),
-    startedAtIdx: index("ingestion_started_at_idx").on(table.startedAt),
-  })
+  (table) => [
+    index("ingestion_source_idx").on(table.source),
+    index("ingestion_status_idx").on(table.status),
+    index("ingestion_started_at_idx").on(table.startedAt),
+  ]
 );
 
 // Data ingestion state tracking - NEW TABLE
@@ -176,9 +176,7 @@ export const dataIngestionState = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => ({
-    sourceIdx: index("ingestion_state_source_idx").on(table.source),
-  })
+  (table) => [index("ingestion_state_source_idx").on(table.source)]
 );
 
 // Dashboard configurations
@@ -196,10 +194,10 @@ export const dashboards = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (table) => ({
-    nameIdx: index("dashboard_name_idx").on(table.name),
-    isDefaultIdx: index("dashboard_is_default_idx").on(table.isDefault),
-  })
+  (table) => [
+    index("dashboard_name_idx").on(table.name),
+    index("dashboard_is_default_idx").on(table.isDefault),
+  ]
 );
 
 // Dashboard sharing and permissions (for future use)
@@ -215,10 +213,8 @@ export const dashboardPermissions = pgTable(
 
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
-  (table) => ({
-    dashboardIdIdx: index("dashboard_permissions_dashboard_id_idx").on(
-      table.dashboardId
-    ),
-    userIdIdx: index("dashboard_permissions_user_id_idx").on(table.userId),
-  })
+  (table) => [
+    index("dashboard_permissions_dashboard_id_idx").on(table.dashboardId),
+    index("dashboard_permissions_user_id_idx").on(table.userId),
+  ]
 );

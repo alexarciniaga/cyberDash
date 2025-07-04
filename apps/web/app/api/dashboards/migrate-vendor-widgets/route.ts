@@ -16,7 +16,7 @@ export async function POST() {
       const updatedWidgets = (dashboard.widgets as any[]).map((widget: any) => {
         // Check if this is a vendor-related widget that should be vendor_card type
         const isVendorWidget =
-          (widget.metricId === "top_vendor" ||
+          (widget.metricId === "top-vendor" ||
             widget.id === "cisa-vendor-breakdown" ||
             widget.id === "cisa-top-vendor") &&
           widget.type === "metric_card";

@@ -124,11 +124,11 @@ export const getEnvironmentConfig = () => {
     // Override configurations based on environment
     query: {
       ...APP_CONFIG.query,
-      // Faster refreshes in development for better DX
+      // Reasonable refreshes in development to prevent constant reinitialization
       refetchInterval: isDevelopment
-        ? 30 * 1000
+        ? 60 * 1000
         : APP_CONFIG.query.refetchInterval,
-      staleTime: isDevelopment ? 15 * 1000 : APP_CONFIG.query.staleTime,
+      staleTime: isDevelopment ? 30 * 1000 : APP_CONFIG.query.staleTime,
     },
     ui: {
       ...APP_CONFIG.ui,

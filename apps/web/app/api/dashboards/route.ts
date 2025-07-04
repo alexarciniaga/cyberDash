@@ -13,6 +13,7 @@ const WidgetConfigSchema = z.object({
   dataSource: z.enum(["cisa", "nvd", "mitre"]),
   metricId: z.string().optional(),
   refreshInterval: z.number().optional(),
+  chartType: z.enum(["line", "bar", "pie"]).optional(),
   settings: z.record(z.any()).optional(),
 });
 
@@ -21,16 +22,18 @@ const DashboardSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
   isDefault: z.boolean().optional().default(false),
-  layout: z.array(
-    z.object({
-      i: z.string(),
-      x: z.number(),
-      y: z.number(),
-      w: z.number(),
-      h: z.number(),
-      minW: z.number().optional(),
-      minH: z.number().optional(),
-    })
+  layout: z.record(
+    z.array(
+      z.object({
+        i: z.string(),
+        x: z.number(),
+        y: z.number(),
+        w: z.number(),
+        h: z.number(),
+        minW: z.number().optional(),
+        minH: z.number().optional(),
+      })
+    )
   ),
   widgets: z.array(WidgetConfigSchema),
   settings: z.record(z.any()).optional(),

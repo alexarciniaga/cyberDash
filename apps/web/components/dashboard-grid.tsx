@@ -9,10 +9,9 @@ import { TableWidget } from "./widgets/table-widget";
 import { ListWidget } from "./widgets/list-widget";
 import { VendorCardWidget } from "./widgets/vendor-card-widget";
 import { getGridConfig } from "@/lib/config";
-import { useDashboard, useUpdateDashboard } from "@/lib/hooks/use-dashboards";
-import { useDashboardStore } from "@/lib/store/dashboard-store";
+import { useUpdateDashboard } from "@/lib/hooks/use-dashboards";
 import { useDebouncedCallback } from "use-debounce";
-import { DashboardProvider } from "@/contexts/dashboard-context";
+import { useDashboardContext } from "@/contexts/app-context";
 
 // Import CSS for react-grid-layout
 import "react-grid-layout/css/styles.css";
@@ -22,6 +21,7 @@ const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface DashboardGridProps {
   dashboardId: string;
+  onRemoveWidget?: (widgetId: string) => void;
 }
 
 // Error boundary for individual widgets
@@ -114,24 +114,26 @@ const widgetComponentMap: {
   vendor_card: VendorCardWidget,
 };
 
-export function DashboardGrid({ dashboardId }: DashboardGridProps) {
-  const { data: initialDashboard, isLoading } = useDashboard(dashboardId);
+export function DashboardGrid({
+  dashboardId,
+  onRemoveWidget,
+}: DashboardGridProps) {
   const { mutate: updateDashboard } = useUpdateDashboard();
 
-  // Get state and actions from the Zustand store
-  const { dashboard, layouts, setDashboard, updateLayouts } =
-    useDashboardStore();
+  // Get state and actions from the React Context
+  const { dashboard, layouts, updateLayouts } = useDashboardContext();
 
-  // Load initial data into the store once it's fetched
+  // Set the current dashboard in context if it's not already set
   React.useEffect(() => {
-    if (initialDashboard) {
-      setDashboard(initialDashboard);
+    if (dashboard?.id !== dashboardId) {
+      // The dashboard context should be managed by the parent AppProvider
+      // This component just uses the dashboard from context
     }
-  }, [initialDashboard, setDashboard]);
+  }, [dashboard?.id, dashboardId]);
 
   const handleLayoutChange = useDebouncedCallback(
     (currentLayout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
-      // Optimistically update the store for a snappy UI
+      // Optimistically update the context for a snappy UI
       updateLayouts(allLayouts);
 
       // Persist the changes to the database
@@ -142,62 +144,65 @@ export function DashboardGrid({ dashboardId }: DashboardGridProps) {
     500 // Debounce for 500ms
   );
 
-  if (isLoading) {
-    return <div>Loading Dashboard...</div>;
-  }
-
   if (!dashboard || !layouts) {
     return <div>Dashboard not found or an error occurred.</div>;
   }
 
   return (
-    <DashboardProvider value={{ dashboard }}>
-      <ResponsiveGridLayout
-        className="w-full h-full"
-        layouts={layouts}
-        onLayoutChange={handleLayoutChange}
-        {...getGridConfig()}
-        draggableHandle=".widget-drag-handle"
-      >
-        {dashboard.widgets.map((widget) => (
-          <div
-            key={widget.id}
-            className="relative h-full group bg-card rounded-lg shadow-sm border"
-          >
-            <WidgetErrorBoundary widgetId={widget.id} widgetType={widget.type}>
-              <div className="relative h-full group">
-                {(() => {
-                  const WidgetComponent = widgetComponentMap[widget.type];
-                  if (WidgetComponent) {
-                    // We now pass only the ID. The widget will use a hook to get its config.
-                    return <WidgetComponent widgetId={widget.id} />;
-                  } else {
-                    console.warn(
-                      "🚨 Unknown widget type:",
-                      widget.type,
-                      "for widget:",
-                      widget.id
-                    );
-                    return (
-                      <div className="h-full bg-muted/50 rounded-lg border border-dashed border-muted-foreground/25 p-4 flex items-center justify-center">
-                        <div className="text-center">
-                          <span className="text-muted-foreground font-medium">
-                            Unknown Widget
-                          </span>
-                          <p className="text-muted-foreground/70 text-sm mt-1">
-                            Type: {widget.type}
-                          </p>
-                        </div>
+    <ResponsiveGridLayout
+      className="w-full h-full"
+      layouts={layouts}
+      onLayoutChange={handleLayoutChange}
+      {...getGridConfig()}
+      draggableHandle=".drag-handle"
+    >
+      {dashboard.widgets.map((widget: WidgetConfig) => (
+        <div
+          key={widget.id}
+          className="relative h-full group bg-card rounded-lg shadow-sm border"
+        >
+          <WidgetErrorBoundary widgetId={widget.id} widgetType={widget.type}>
+            <div className="relative h-full group">
+              {(() => {
+                const WidgetComponent = widgetComponentMap[widget.type];
+                if (WidgetComponent) {
+                  // We now pass only the ID and the delete handler. The widget will use a hook to get its config.
+                  return (
+                    <WidgetComponent
+                      widgetId={widget.id}
+                      onDelete={
+                        onRemoveWidget
+                          ? () => onRemoveWidget(widget.id)
+                          : undefined
+                      }
+                    />
+                  );
+                } else {
+                  console.warn(
+                    "🚨 Unknown widget type:",
+                    widget.type,
+                    "for widget:",
+                    widget.id
+                  );
+                  return (
+                    <div className="h-full bg-muted/50 rounded-lg border border-dashed border-muted-foreground/25 p-4 flex items-center justify-center">
+                      <div className="text-center">
+                        <span className="text-muted-foreground font-medium">
+                          Unknown Widget
+                        </span>
+                        <p className="text-muted-foreground/70 text-sm mt-1">
+                          Type: {widget.type}
+                        </p>
                       </div>
-                    );
-                  }
-                })()}
-              </div>
-            </WidgetErrorBoundary>
-          </div>
-        ))}
-      </ResponsiveGridLayout>
-    </DashboardProvider>
+                    </div>
+                  );
+                }
+              })()}
+            </div>
+          </WidgetErrorBoundary>
+        </div>
+      ))}
+    </ResponsiveGridLayout>
   );
 }
 

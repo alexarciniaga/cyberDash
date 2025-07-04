@@ -6,7 +6,6 @@ import { DashboardGrid } from "@/components/dashboard-grid";
 import { DashboardSidebar } from "@/components/dashboard-sidebar";
 import { WidgetLibrary } from "@/components/widget-library";
 import { DateRangePicker } from "@/components/date-range-picker";
-import { DateRangeProvider } from "@/contexts/date-range-context";
 import { EditableTitle } from "@/components/editable-title";
 import { EditableDescription } from "@/components/editable-description";
 import { CreateDashboardModal } from "@/components/create-dashboard-modal";
@@ -24,241 +23,12 @@ import {
 import { useDashboardRefresh } from "@/lib/hooks/use-dashboard-refresh";
 import { PlusIcon, RotateCcwIcon, BookOpenIcon } from "lucide-react";
 import { getWidgetSize, generateSmartLayout } from "@/lib/widget-library-data";
-import { useDashboardStore } from "@/lib/store/dashboard-store";
 import { useDebouncedCallback } from "use-debounce";
-
-// Complete dashboard template with all available widgets - will be used as template for new dashboards
-const sampleDashboardTemplate = {
-  name: "New Dashboard",
-  description: "Complete cybersecurity dashboard with all available widgets",
-  isDefault: false,
-  widgets: [
-    // CISA KEV Widgets
-    {
-      id: "cisa-kev-count",
-      type: "metric_card" as const,
-      title: "CISA KEV Total",
-      description: "Known Exploited Vulnerabilities",
-      dataSource: "cisa" as const,
-      metricId: "total_count",
-      refreshInterval: 60,
-    },
-    {
-      id: "cisa-top-vendor",
-      type: "vendor_card" as const,
-      title: "Top Vendor",
-      description: "Most vulnerable vendor",
-      dataSource: "cisa" as const,
-      metricId: "top_vendor",
-      refreshInterval: 30,
-    },
-    {
-      id: "cisa-vendor-leaderboard",
-      type: "list" as const,
-      title: "Vendor Leaderboard",
-      description: "Top vendors by vulnerability count",
-      dataSource: "cisa" as const,
-      metricId: "vendor_breakdown",
-      refreshInterval: 300,
-    },
-    {
-      id: "cisa-due-date-compliance",
-      type: "metric_card" as const,
-      title: "Due Date Compliance",
-      description: "Percentage of vulnerabilities not approaching due date",
-      dataSource: "cisa" as const,
-      metricId: "due_date_compliance",
-      refreshInterval: 30,
-    },
-    {
-      id: "cisa-vendor-breakdown",
-      type: "table" as const,
-      title: "Vendor Breakdown",
-      description: "Vulnerabilities by vendor",
-      dataSource: "cisa" as const,
-      metricId: "vendor_breakdown",
-      refreshInterval: 300,
-    },
-    {
-      id: "cisa-new-vulns-rate",
-      type: "chart" as const,
-      title: "New Vulnerabilities Rate",
-      description: "Rate of new vulnerabilities over time",
-      dataSource: "cisa" as const,
-      metricId: "new_vulns_rate",
-      refreshInterval: 60,
-    },
-    {
-      id: "cisa-product-distribution",
-      type: "chart" as const,
-      title: "Product Distribution",
-      description: "Distribution of vulnerabilities by product",
-      dataSource: "cisa" as const,
-      metricId: "product_distribution",
-      chartType: "pie" as const,
-      refreshInterval: 300,
-    },
-    // NVD CVE Widgets
-    {
-      id: "nvd-cve-critical",
-      type: "metric_card" as const,
-      title: "Critical CVEs",
-      description: "CVSS Score ≥ 9.0",
-      dataSource: "nvd" as const,
-      metricId: "critical_count",
-      refreshInterval: 30,
-    },
-    {
-      id: "nvd-publication-trends",
-      type: "chart" as const,
-      title: "CVE Publication Trends",
-      description: "CVEs published over time",
-      dataSource: "nvd" as const,
-      metricId: "publication_trends",
-      refreshInterval: 60,
-    },
-    {
-      id: "nvd-severity-distribution",
-      type: "table" as const,
-      title: "Severity Distribution",
-      description: "CVEs by CVSS severity levels",
-      dataSource: "nvd" as const,
-      metricId: "severity_distribution",
-      refreshInterval: 300,
-    },
-    {
-      id: "nvd-recent-high-severity",
-      type: "list" as const,
-      title: "Recent High Severity",
-      description: "Recently published high severity CVEs",
-      dataSource: "nvd" as const,
-      metricId: "recent_high_severity",
-      refreshInterval: 30,
-    },
-    {
-      id: "nvd-vuln-status-summary",
-      type: "table" as const,
-      title: "Vulnerability Status Summary",
-      description: "Summary of vulnerability statuses",
-      dataSource: "nvd" as const,
-      metricId: "vuln_status_summary",
-      refreshInterval: 60,
-    },
-    // MITRE ATT&CK Widgets
-    {
-      id: "mitre-technique-count",
-      type: "metric_card" as const,
-      title: "ATT&CK Techniques",
-      description: "Total techniques in framework",
-      dataSource: "mitre" as const,
-      metricId: "technique_count",
-      refreshInterval: 3600,
-    },
-    {
-      id: "mitre-tactics-coverage",
-      type: "table" as const,
-      title: "MITRE Tactics Coverage",
-      description: "ATT&CK tactics and technique counts",
-      dataSource: "mitre" as const,
-      metricId: "tactics_coverage",
-      refreshInterval: 300,
-    },
-    {
-      id: "mitre-platform-coverage",
-      type: "table" as const,
-      title: "Platform Coverage",
-      description: "ATT&CK technique coverage by platform",
-      dataSource: "mitre" as const,
-      metricId: "platform_coverage",
-      refreshInterval: 300,
-    },
-    {
-      id: "mitre-recent-updates",
-      type: "list" as const,
-      title: "Recent Framework Updates",
-      description: "Latest MITRE ATT&CK technique updates and additions",
-      dataSource: "mitre" as const,
-      metricId: "recent_updates",
-      refreshInterval: 300,
-    },
-    {
-      id: "mitre-top-techniques",
-      type: "list" as const,
-      title: "Most Versatile Techniques",
-      description: "Techniques spanning multiple tactics and platforms",
-      dataSource: "mitre" as const,
-      metricId: "top_techniques",
-      refreshInterval: 300,
-    },
-  ],
-};
-
-// Generate layout for complete dashboard using optimized positioning from console output
-const generateSampleLayout = (): GridLayoutItem[] => {
-  // Improved layout organized by data source with better flow and grouping
-  return [
-    // === TOP ROW: KEY METRICS (Most Important Summary Data) ===
-    { i: "cisa-kev-count", x: 0, y: 0, w: 3, h: 3, minW: 2, minH: 2 },
-    { i: "nvd-cve-critical", x: 3, y: 0, w: 3, h: 3, minW: 2, minH: 2 },
-    { i: "mitre-technique-count", x: 6, y: 0, w: 3, h: 3, minW: 2, minH: 2 },
-    { i: "cisa-due-date-compliance", x: 9, y: 0, w: 3, h: 3, minW: 2, minH: 2 },
-
-    // === CISA SECTION (Rows 3-10) ===
-    { i: "cisa-top-vendor", x: 0, y: 3, w: 4, h: 3, minW: 3, minH: 3 },
-    { i: "cisa-vendor-leaderboard", x: 4, y: 3, w: 4, h: 4, minW: 3, minH: 3 },
-    { i: "cisa-vendor-breakdown", x: 8, y: 3, w: 4, h: 4, minW: 4, minH: 4 },
-
-    { i: "cisa-new-vulns-rate", x: 0, y: 7, w: 8, h: 4, minW: 6, minH: 4 },
-    {
-      i: "cisa-product-distribution",
-      x: 8,
-      y: 7,
-      w: 4,
-      h: 4,
-      minW: 4,
-      minH: 4,
-    },
-
-    // === NVD SECTION (Rows 11-18) ===
-    { i: "nvd-publication-trends", x: 0, y: 11, w: 12, h: 4, minW: 8, minH: 4 },
-
-    {
-      i: "nvd-severity-distribution",
-      x: 0,
-      y: 15,
-      w: 6,
-      h: 4,
-      minW: 4,
-      minH: 4,
-    },
-    {
-      i: "nvd-recent-high-severity",
-      x: 6,
-      y: 15,
-      w: 6,
-      h: 4,
-      minW: 4,
-      minH: 4,
-    },
-
-    {
-      i: "nvd-vuln-status-summary",
-      x: 0,
-      y: 19,
-      w: 12,
-      h: 3,
-      minW: 6,
-      minH: 3,
-    },
-
-    // === MITRE SECTION (Rows 22-29) ===
-    { i: "mitre-tactics-coverage", x: 0, y: 22, w: 6, h: 4, minW: 4, minH: 4 },
-    { i: "mitre-platform-coverage", x: 6, y: 22, w: 6, h: 4, minW: 4, minH: 4 },
-
-    { i: "mitre-recent-updates", x: 0, y: 26, w: 6, h: 3, minW: 4, minH: 3 },
-    { i: "mitre-top-techniques", x: 6, y: 26, w: 6, h: 3, minW: 4, minH: 3 },
-  ];
-};
+import { AppProvider } from "@/contexts/app-context";
+import {
+  sampleDashboardTemplate,
+  generateSampleLayout,
+} from "@/lib/dashboard-templates";
 
 function PageContent() {
   const searchParams = useSearchParams();
@@ -665,7 +435,7 @@ function PageContent() {
   }
 
   return (
-    <DateRangeProvider defaultPreset="30d">
+    <AppProvider initialDashboard={currentDashboard}>
       <div className="min-h-screen bg-background flex">
         <DashboardSidebar
           dashboards={dashboards}
@@ -840,7 +610,10 @@ function PageContent() {
 
             {currentDashboard ? (
               <>
-                <DashboardGrid dashboardId={currentDashboard.id} />
+                <DashboardGrid
+                  dashboardId={currentDashboard.id}
+                  onRemoveWidget={handleRemoveWidget}
+                />
 
                 <div className="mt-6 text-center text-sm text-muted-foreground">
                   <p>✨ Drag and resize widgets to customize your dashboard</p>
@@ -875,7 +648,7 @@ function PageContent() {
           </div>
         </div>
       </div>
-    </DateRangeProvider>
+    </AppProvider>
   );
 }
 
