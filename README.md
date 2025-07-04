@@ -4,7 +4,7 @@
 
 ## 📖 Documentation
 
-Complete documentation is available in **[`/cyberDash/docs`](./cyberDash/docs)**:
+Complete documentation is available in **[`/docs`](./docs)**:
 
 - **[📋 README](./docs/README.md)** - Project overview and quick navigation
 - **[🛠️ Setup Guide](./docs/SETUP.md)** - Installation and configuration
