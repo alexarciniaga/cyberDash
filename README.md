@@ -6,10 +6,10 @@
 
 Complete documentation is available in **[`/cyberDash/docs`](./cyberDash/docs)**:
 
-- **[📋 README](./cyberDash/docs/README.md)** - Project overview and quick navigation
-- **[🛠️ Setup Guide](./cyberDash/docs/SETUP.md)** - Installation and configuration
-- **[📊 User Guide](./cyberDash/docs/USER-GUIDE.md)** - Dashboard usage and metrics
-- **[💻 Developer Guide](./cyberDash/docs/DEVELOPER-GUIDE.md)** - Architecture and development
+- **[📋 README](./docs/README.md)** - Project overview and quick navigation
+- **[🛠️ Setup Guide](./docs/SETUP.md)** - Installation and configuration
+- **[📊 User Guide](./docs/USER-GUIDE.md)** - Dashboard usage and metrics
+- **[💻 Developer Guide](./docs/DEVELOPER-GUIDE.md)** - Architecture and development
 
 ## 🚀 Quick Start
 
@@ -45,13 +45,13 @@ Transform **raw cybersecurity data** into **actionable intelligence**:
 
 ## 🤝 Contributing
 
-See our **[Developer Guide](./cyberDash/docs/DEVELOPER-GUIDE.md)** for setup, architecture, and contribution guidelines.
+See our **[Developer Guide](./docs/DEVELOPER-GUIDE.md)** for setup, architecture, and contribution guidelines.
 
 ## 🆘 Support
 
-- **Setup Issues**: [Setup Guide](./cyberDash/docs/SETUP.md)
-- **Usage Questions**: [User Guide](./cyberDash/docs/USER-GUIDE.md)
-- **Bug Reports**: [Create an issue](https://github.com/your-org/cyberdash/issues)
+- **Setup Issues**: [Setup Guide](./docs/SETUP.md)
+- **Usage Questions**: [User Guide](./docs/USER-GUIDE.md)
+- **Bug Reports**: [Create an issue](https://github.com/alexarciniaga/cyberDash/issues)
 
 ---
 
