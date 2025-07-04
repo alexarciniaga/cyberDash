@@ -3,20 +3,15 @@ import postgres from "postgres";
 import * as schema from "./schema";
 
 // Create the connection
-const connectionString = process.env.POSTGRES_URL || process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error(
-    "Database connection string not found. Please set POSTGRES_URL or DATABASE_URL environment variable."
-  );
-}
+const connectionString =
+  process.env.DATABASE_URL ||
+  "postgresql://postgres:password@localhost:5432/cyberdash";
 
 // Create postgres connection
 const client = postgres(connectionString, {
-  max: 10,
+  max: 1,
   idle_timeout: 20,
-  connect_timeout: 30,
-  max_lifetime: 60 * 30, // 30 minutes
+  connect_timeout: 10,
 });
 
 // Create drizzle instance

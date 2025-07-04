@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db/connection";
+// Import database connection only when needed at runtime
 import { dashboards } from "@/lib/db/schema";
 import { getRefreshInterval } from "@/lib/config";
 
@@ -224,6 +224,9 @@ const defaultDashboardTemplate = {
 // POST /api/dashboards/initialize - Initialize default dashboard if none exists
 export async function POST() {
   try {
+    // Import database connection at runtime
+    const { db } = await import("@/lib/db/connection");
+
     // Check if any dashboards exist
     const existingDashboards = await db.select().from(dashboards).limit(1);
 
