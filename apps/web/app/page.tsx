@@ -24,6 +24,8 @@ import {
 import { useDashboardRefresh } from "@/lib/hooks/use-dashboard-refresh";
 import { PlusIcon, RotateCcwIcon, BookOpenIcon } from "lucide-react";
 import { getWidgetSize, generateSmartLayout } from "@/lib/widget-library-data";
+import { useDashboardStore } from "@/lib/store/dashboard-store";
+import { useDebouncedCallback } from "use-debounce";
 
 // Complete dashboard template with all available widgets - will be used as template for new dashboards
 const sampleDashboardTemplate = {
@@ -369,7 +371,7 @@ function PageContent() {
           description: data.description,
           isDefault: false,
           widgets: data.widgets,
-          layout: data.layout,
+          layout: { lg: data.layout },
         });
         setCurrentDashboard(newDashboard);
         updateUrlDashboardId(newDashboard.id);
@@ -451,11 +453,11 @@ function PageContent() {
       if (!currentDashboard) return;
 
       try {
-        // Find the best position for the new widget
-        const existingLayout = currentDashboard.layout;
+        // Find the best position for the new widget based on the 'lg' layout
+        const existingLgLayout = currentDashboard.layout?.lg || [];
         const maxY =
-          existingLayout.length > 0
-            ? Math.max(...existingLayout.map((item) => item.y + item.h))
+          existingLgLayout.length > 0
+            ? Math.max(...existingLgLayout.map((item) => item.y + item.h))
             : 0;
 
         // Create new layout item for the widget
@@ -477,7 +479,10 @@ function PageContent() {
           id: currentDashboard.id,
           data: {
             widgets: [...currentDashboard.widgets, widget],
-            layout: [...currentDashboard.layout, newLayoutItem],
+            layout: {
+              ...currentDashboard.layout,
+              lg: [...existingLgLayout, newLayoutItem],
+            },
           },
         });
 
@@ -485,7 +490,10 @@ function PageContent() {
         setCurrentDashboard({
           ...currentDashboard,
           widgets: [...currentDashboard.widgets, widget],
-          layout: [...currentDashboard.layout, newLayoutItem],
+          layout: {
+            ...currentDashboard.layout,
+            lg: [...existingLgLayout, newLayoutItem],
+          },
         });
       } catch (error) {
         console.error("Failed to add widget:", error);
@@ -507,11 +515,11 @@ function PageContent() {
       if (!confirmed) return;
 
       try {
-        // Remove widget and its layout item
+        // Remove widget and its layout item from the 'lg' breakpoint
         const updatedWidgets = currentDashboard.widgets.filter(
           (w) => w.id !== widgetId
         );
-        const updatedLayout = currentDashboard.layout.filter(
+        const updatedLgLayout = (currentDashboard.layout?.lg || []).filter(
           (item) => item.i !== widgetId
         );
 
@@ -519,7 +527,7 @@ function PageContent() {
           id: currentDashboard.id,
           data: {
             widgets: updatedWidgets,
-            layout: updatedLayout,
+            layout: { ...currentDashboard.layout, lg: updatedLgLayout },
           },
         });
 
@@ -527,7 +535,7 @@ function PageContent() {
         setCurrentDashboard({
           ...currentDashboard,
           widgets: updatedWidgets,
-          layout: updatedLayout,
+          layout: { ...currentDashboard.layout, lg: updatedLgLayout },
         });
       } catch (error) {
         console.error("Failed to remove widget:", error);
@@ -609,14 +617,14 @@ function PageContent() {
       await updateDashboard.mutateAsync({
         id: currentDashboard.id,
         data: {
-          layout: optimizedLayout,
+          layout: { lg: optimizedLayout },
         },
       });
 
       // Update local state
       setCurrentDashboard({
         ...currentDashboard,
-        layout: optimizedLayout,
+        layout: { lg: optimizedLayout },
       });
     } catch (error) {
       console.error("Failed to reset layout:", error);
@@ -832,12 +840,7 @@ function PageContent() {
 
             {currentDashboard ? (
               <>
-                <DashboardGrid
-                  dashboard={currentDashboard}
-                  onLayoutChange={handleLayoutChange}
-                  onRemoveWidget={handleRemoveWidget}
-                  className="min-h-[600px]"
-                />
+                <DashboardGrid dashboardId={currentDashboard.id} />
 
                 <div className="mt-6 text-center text-sm text-muted-foreground">
                   <p>✨ Drag and resize widgets to customize your dashboard</p>

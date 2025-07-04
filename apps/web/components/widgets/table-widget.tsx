@@ -10,11 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
 import { GripVerticalIcon } from "lucide-react";
 import { WidgetConfig, TableData } from "@/lib/types";
 import { useMetricData } from "@/lib/hooks/use-metric-data";
 import { cn } from "@/lib/ui-utils";
+import { useDashboardStore } from "@/lib/store/dashboard-store";
+import { useVulnerabilityData } from "@/lib/hooks/use-vulnerability-data";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Types for distribution data formats
 interface VendorBreakdownItem {
@@ -28,8 +33,8 @@ interface TacticsItem {
   shortName?: string;
 }
 
-interface TableWidgetProps {
-  config: WidgetConfig;
+export interface TableWidgetProps {
+  widgetId: string;
   className?: string;
 }
 
@@ -221,71 +226,73 @@ const TableDisplay = React.memo<{ data: TableData }>(({ data }) => {
 TableDisplay.displayName = "TableDisplay";
 
 // Main component
-export const TableWidget = React.memo<TableWidgetProps>(
-  ({ config, className }) => {
-    const {
-      data: metricData,
-      isLoading,
-      error,
-    } = useMetricData({
-      dataSource: config.dataSource,
-      metricId: config.metricId || "vendor_breakdown",
-      refreshInterval: config.refreshInterval || 60,
-    });
+export function TableWidget({ widgetId, className }: TableWidgetProps) {
+  const config = useDashboardStore((state) =>
+    state.dashboard?.widgets.find((w) => w.id === widgetId)
+  );
 
-    // Transform data to table format with memoization
-    const tableData = React.useMemo((): TableData | null => {
-      if (metricData?.table) {
-        return metricData.table;
-      }
+  const { data, isLoading, error } = useMetricData({
+    dataSource: config?.dataSource,
+    metricId: config?.metricId,
+    enabled: !!config,
+  });
 
-      if (metricData?.distribution) {
-        return transformDistributionToTable(metricData.distribution);
-      }
-
-      return null;
-    }, [metricData]);
-
-    // Memoize header props
-    const headerProps = React.useMemo(
-      () => ({
-        title: config.title,
-        description: config.description,
-      }),
-      [config.title, config.description]
-    );
-
-    return (
-      <Card className={cn("w-full h-full flex flex-col", className)}>
-        <WidgetHeader {...headerProps} />
-        <CardContent className="p-3 flex-1 flex flex-col min-h-0">
-          {isLoading && (
-            <div className="flex-1 min-h-0">
-              <TableSkeleton />
-            </div>
-          )}
-
-          {error && (
-            <div className="flex-1 min-h-0">
-              <TableError />
-            </div>
-          )}
-
-          {!isLoading && !error && tableData && (
-            <div className="flex-1 min-h-0">
-              <TableDisplay data={tableData} />
-            </div>
-          )}
-
-          {!isLoading && !error && !tableData && (
-            <div className="flex-1 min-h-0">
-              <EmptyTable />
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
+  if (!config) {
+    return <Skeleton className={cn("h-full w-full", className)} />;
   }
-);
+
+  // Transform data to table format with memoization
+  const tableData = React.useMemo((): TableData | null => {
+    if (data?.table) {
+      return data.table;
+    }
+
+    if (data?.distribution) {
+      return transformDistributionToTable(data.distribution);
+    }
+
+    return null;
+  }, [data]);
+
+  // Memoize header props
+  const headerProps = React.useMemo(
+    () => ({
+      title: config.title,
+      description: config.description,
+    }),
+    [config.title, config.description]
+  );
+
+  return (
+    <Card className={cn("w-full h-full flex flex-col", className)}>
+      <WidgetHeader {...headerProps} />
+      <CardContent className="p-3 flex-1 flex flex-col min-h-0">
+        {isLoading && (
+          <div className="flex-1 min-h-0">
+            <TableSkeleton />
+          </div>
+        )}
+
+        {error && (
+          <div className="flex-1 min-h-0">
+            <TableError />
+          </div>
+        )}
+
+        {!isLoading && !error && tableData && (
+          <div className="flex-1 min-h-0">
+            <TableDisplay data={tableData} />
+          </div>
+        )}
+
+        {!isLoading && !error && !tableData && (
+          <div className="flex-1 min-h-0">
+            <EmptyTable />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 TableWidget.displayName = "TableWidget";

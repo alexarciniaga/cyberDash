@@ -9,6 +9,10 @@ import { TableWidget } from "./widgets/table-widget";
 import { ListWidget } from "./widgets/list-widget";
 import { VendorCardWidget } from "./widgets/vendor-card-widget";
 import { getGridConfig } from "@/lib/config";
+import { useDashboard, useUpdateDashboard } from "@/lib/hooks/use-dashboards";
+import { useDashboardStore } from "@/lib/store/dashboard-store";
+import { useDebouncedCallback } from "use-debounce";
+import { DashboardProvider } from "@/contexts/dashboard-context";
 
 // Import CSS for react-grid-layout
 import "react-grid-layout/css/styles.css";
@@ -17,21 +21,19 @@ import "react-grid-layout/css/styles.css";
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface DashboardGridProps {
-  dashboard: DashboardLayout;
-  onLayoutChange?: (
-    layout: Layout[],
-    layouts: { [key: string]: Layout[] }
-  ) => void;
-  onRemoveWidget?: (widgetId: string) => void;
-  className?: string;
+  dashboardId: string;
 }
 
 // Error boundary for individual widgets
 class WidgetErrorBoundary extends React.Component<
-  { children: React.ReactNode; widgetId: string },
+  { children: React.ReactNode; widgetId: string; widgetType: string },
   { hasError: boolean }
 > {
-  constructor(props: { children: React.ReactNode; widgetId: string }) {
+  constructor(props: {
+    children: React.ReactNode;
+    widgetId: string;
+    widgetType: string;
+  }) {
     super(props);
     this.state = { hasError: false };
   }
@@ -101,60 +103,75 @@ const generateResponsiveLayouts = (
   };
 };
 
-export function DashboardGrid({
-  dashboard,
-  onLayoutChange,
-  onRemoveWidget,
-  className,
-}: DashboardGridProps) {
-  // Generate responsive layouts
-  const responsiveLayouts = React.useMemo(
-    () => generateResponsiveLayouts(dashboard.layout),
-    [dashboard.layout]
-  );
+// A map of widget types to their components
+const widgetComponentMap: {
+  [key: string]: React.ComponentType<any>;
+} = {
+  list: ListWidget,
+  metric_card: MetricCardWidget,
+  chart: ChartWidget,
+  table: TableWidget,
+  vendor_card: VendorCardWidget,
+};
 
-  const [layouts, setLayouts] = React.useState<{ [key: string]: Layout[] }>(
-    responsiveLayouts
-  );
+export function DashboardGrid({ dashboardId }: DashboardGridProps) {
+  const { data: initialDashboard, isLoading } = useDashboard(dashboardId);
+  const { mutate: updateDashboard } = useUpdateDashboard();
 
-  // Update layouts when dashboard changes
+  // Get state and actions from the Zustand store
+  const { dashboard, layouts, setDashboard, updateLayouts } =
+    useDashboardStore();
+
+  // Load initial data into the store once it's fetched
   React.useEffect(() => {
-    setLayouts(generateResponsiveLayouts(dashboard.layout));
-  }, [dashboard.layout]);
+    if (initialDashboard) {
+      setDashboard(initialDashboard);
+    }
+  }, [initialDashboard, setDashboard]);
 
-  // Simple layout change handler - react-grid-layout handles compaction automatically
-  const handleLayoutChange = React.useCallback(
-    (layout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
-      setLayouts(allLayouts);
-      onLayoutChange?.(layout, allLayouts);
+  const handleLayoutChange = useDebouncedCallback(
+    (currentLayout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
+      // Optimistically update the store for a snappy UI
+      updateLayouts(allLayouts);
+
+      // Persist the changes to the database
+      if (dashboard) {
+        updateDashboard({ id: dashboard.id, data: { layout: allLayouts } });
+      }
     },
-    [onLayoutChange]
+    500 // Debounce for 500ms
   );
 
-  // MODERN BEST PRACTICE: Memoize children to prevent unnecessary re-renders
-  const gridItems = React.useMemo(
-    () =>
-      dashboard.widgets.map((widget) => (
-        <div key={widget.id} className="grid-item">
-          <WidgetErrorBoundary widgetId={widget.id}>
-            <div className="relative h-full group">
-              {(() => {
-                switch (widget.type) {
-                  case "metric_card":
-                    return (
-                      <MetricCardWidget config={widget} className="h-full" />
-                    );
-                  case "vendor_card":
-                    return (
-                      <VendorCardWidget config={widget} className="h-full" />
-                    );
-                  case "chart":
-                    return <ChartWidget config={widget} className="h-full" />;
-                  case "table":
-                    return <TableWidget config={widget} className="h-full" />;
-                  case "list":
-                    return <ListWidget config={widget} className="h-full" />;
-                  default:
+  if (isLoading) {
+    return <div>Loading Dashboard...</div>;
+  }
+
+  if (!dashboard || !layouts) {
+    return <div>Dashboard not found or an error occurred.</div>;
+  }
+
+  return (
+    <DashboardProvider value={{ dashboard }}>
+      <ResponsiveGridLayout
+        className="w-full h-full"
+        layouts={layouts}
+        onLayoutChange={handleLayoutChange}
+        {...getGridConfig()}
+        draggableHandle=".widget-drag-handle"
+      >
+        {dashboard.widgets.map((widget) => (
+          <div
+            key={widget.id}
+            className="relative h-full group bg-card rounded-lg shadow-sm border"
+          >
+            <WidgetErrorBoundary widgetId={widget.id} widgetType={widget.type}>
+              <div className="relative h-full group">
+                {(() => {
+                  const WidgetComponent = widgetComponentMap[widget.type];
+                  if (WidgetComponent) {
+                    // We now pass only the ID. The widget will use a hook to get its config.
+                    return <WidgetComponent widgetId={widget.id} />;
+                  } else {
                     console.warn(
                       "🚨 Unknown widget type:",
                       widget.type,
@@ -173,79 +190,14 @@ export function DashboardGrid({
                         </div>
                       </div>
                     );
-                }
-              })()}
-              {onRemoveWidget && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onRemoveWidget(widget.id);
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className="absolute top-2 right-2 z-[1000] p-1.5 bg-destructive text-destructive-foreground rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/90 shadow-lg border border-destructive-foreground/20 pointer-events-auto"
-                  title="Remove widget"
-                  style={{ pointerEvents: "auto" }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ pointerEvents: "none" }}
-                  >
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </WidgetErrorBoundary>
-        </div>
-      )),
-    [dashboard.widgets, onRemoveWidget]
-  );
-
-  // Get grid configuration
-  const gridConfig = React.useMemo(() => getGridConfig(), []);
-
-  return (
-    <div className={className}>
-      <ResponsiveGridLayout
-        className="layout"
-        layouts={layouts}
-        onLayoutChange={handleLayoutChange}
-        breakpoints={gridConfig.breakpoints}
-        cols={gridConfig.columns}
-        rowHeight={gridConfig.rowHeight}
-        margin={gridConfig.margin}
-        containerPadding={gridConfig.containerPadding}
-        // Standard react-grid-layout configuration for gap filling
-        isDraggable={true}
-        isResizable={true}
-        useCSSTransforms={true}
-        compactType="vertical" // Default - automatically fills gaps vertically
-        preventCollision={false} // Default - allows items to move for compaction
-        autoSize={true} // Default - container adjusts height to content
-        resizeHandles={["se"]} // Default - southeast corner handle
-        // MODERN BEST PRACTICE: Use CSS class for drag handle
-        draggableHandle=".drag-handle"
-      >
-        {gridItems}
+                  }
+                })()}
+              </div>
+            </WidgetErrorBoundary>
+          </div>
+        ))}
       </ResponsiveGridLayout>
-    </div>
+    </DashboardProvider>
   );
 }
 

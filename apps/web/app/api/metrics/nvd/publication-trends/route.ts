@@ -3,6 +3,8 @@ import { db } from "@/lib/db/connection";
 import { nvdCve } from "@/lib/db/schema";
 import { sql } from "drizzle-orm";
 
+export const revalidate = 3600; // Revalidate cache every hour
+
 export async function GET() {
   try {
     // Get CVE publication trends for the last 30 days

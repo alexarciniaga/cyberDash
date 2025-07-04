@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { GripVerticalIcon } from "lucide-react";
 import { WidgetConfig } from "@/lib/types";
 import { useMetricData } from "@/lib/hooks/use-metric-data";
+import { useDashboardStore } from "@/lib/store/dashboard-store";
 import {
   PieChart,
   Pie,
@@ -15,8 +16,8 @@ import {
   Legend,
 } from "recharts";
 
-interface PieChartWidgetProps {
-  config: WidgetConfig;
+export interface PieChartWidgetProps {
+  widgetId: string;
   className?: string;
 }
 
@@ -45,16 +46,24 @@ const COLORS = [
 ];
 
 export const PieChartWidget = React.memo<PieChartWidgetProps>(
-  function PieChartWidget({ config, className }) {
+  function PieChartWidget({ widgetId, className }) {
+    const config = useDashboardStore((state) =>
+      state.dashboard?.widgets.find((w) => w.id === widgetId)
+    );
     const {
       data: metricData,
       isLoading,
       error,
     } = useMetricData({
-      dataSource: config.dataSource,
-      metricId: config.metricId || "product_distribution",
-      refreshInterval: config.refreshInterval || 60,
+      dataSource: config?.dataSource,
+      metricId: config?.metricId || "product-distribution",
+      refreshInterval: config?.refreshInterval || 60,
+      enabled: !!config,
     });
+
+    if (!config) {
+      return <Skeleton className={`${className} h-full w-full`} />;
+    }
 
     const chartData = React.useMemo(() => {
       // Handle distribution data (for product distribution, vendor breakdown, etc.)

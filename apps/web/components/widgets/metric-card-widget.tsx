@@ -9,9 +9,15 @@ import {
   useDateRange,
   getDateRangeDescription,
 } from "@/contexts/date-range-context";
+import { useWidgetConfig } from "@/contexts/dashboard-context";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/ui-utils";
+import { AlertTriangle } from "lucide-react";
+import { useDashboardStore } from "@/lib/store/dashboard-store";
 
-interface MetricCardWidgetProps {
-  config: WidgetConfig;
+export interface MetricCardWidgetProps {
+  widgetId: string;
   className?: string;
 }
 
@@ -89,59 +95,68 @@ const MetricDisplay = React.memo<{
 ));
 MetricDisplay.displayName = "MetricDisplay";
 
-export const MetricCardWidget = React.memo<MetricCardWidgetProps>(
-  ({ config, className }) => {
-    const { dateRange } = useDateRange();
-    const {
-      data: metricData,
-      isLoading,
-      error,
-    } = useMetricData({
-      dataSource: config.dataSource,
-      metricId: config.metricId || "total_count",
-      refreshInterval: config.refreshInterval || 60,
-    });
+export function MetricCardWidget({
+  widgetId,
+  className,
+}: MetricCardWidgetProps) {
+  // Select ONLY the config for this specific widget from the store
+  const config = useDashboardStore((state) =>
+    state.dashboard?.widgets.find((w) => w.id === widgetId)
+  );
 
-    // Memoize the date range description
-    const dateRangeDescription = React.useMemo(
-      () => getDateRangeDescription(dateRange),
-      [dateRange]
-    );
+  const { dateRange } = useDateRange();
+  const {
+    data: metricData,
+    isLoading,
+    error,
+  } = useMetricData({
+    metricId: config?.metricId,
+    enabled: !!config?.metricId,
+  });
 
-    // Memoize metric values to prevent unnecessary re-renders
-    const metricValues = React.useMemo(
-      () => ({
-        value: metricData?.value?.value ?? 0,
-        changePercent: metricData?.value?.changePercent ?? 0,
-      }),
-      [metricData?.value?.value, metricData?.value?.changePercent]
-    );
-
-    // Memoize header props
-    const headerProps = React.useMemo(
-      () => ({
-        title: config.title,
-        description: config.description,
-      }),
-      [config.title, config.description]
-    );
-
-    return (
-      <Card className={`${className} h-full`}>
-        <WidgetHeader {...headerProps} />
-        <CardContent className="pt-0 pb-3">
-          {isLoading && <LoadingSkeleton />}
-          {error && <ErrorState />}
-          {!isLoading && !error && (
-            <MetricDisplay
-              {...metricValues}
-              dateRangeDescription={dateRangeDescription}
-            />
-          )}
-        </CardContent>
-      </Card>
-    );
+  if (!config) {
+    return <Skeleton className={cn("h-full w-full", className)} />;
   }
-);
+
+  // Memoize the date range description
+  const dateRangeDescription = React.useMemo(
+    () => getDateRangeDescription(dateRange),
+    [dateRange]
+  );
+
+  // Memoize metric values to prevent unnecessary re-renders
+  const metricValues = React.useMemo(
+    () => ({
+      value: metricData?.value?.value ?? 0,
+      changePercent: metricData?.value?.changePercent ?? 0,
+    }),
+    [metricData?.value?.value, metricData?.value?.changePercent]
+  );
+
+  // Memoize header props
+  const headerProps = React.useMemo(
+    () => ({
+      title: config.title,
+      description: config.description,
+    }),
+    [config.title, config.description]
+  );
+
+  return (
+    <Card className={`${className} h-full`}>
+      <WidgetHeader {...headerProps} />
+      <CardContent className="pt-0 pb-3">
+        {isLoading && <LoadingSkeleton />}
+        {error && <ErrorState />}
+        {!isLoading && !error && (
+          <MetricDisplay
+            {...metricValues}
+            dateRangeDescription={dateRangeDescription}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 MetricCardWidget.displayName = "MetricCardWidget";

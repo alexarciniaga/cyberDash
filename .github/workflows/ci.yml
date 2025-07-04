@@ -11,6 +11,8 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -18,12 +20,10 @@ jobs:
       - name: 1. Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0
 
       - name: 2. Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: 3. Setup Node.js and Cache Dependencies
         uses: actions/setup-node@v4

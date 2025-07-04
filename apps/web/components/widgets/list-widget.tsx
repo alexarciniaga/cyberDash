@@ -7,9 +7,11 @@ import { GripVerticalIcon, ExternalLinkIcon } from "lucide-react";
 import { WidgetConfig, ListData, MetricValue } from "@/lib/types";
 import { useMetricData } from "@/lib/hooks/use-metric-data";
 import { cn } from "@/lib/ui-utils";
+import { useDashboardStore } from "@/lib/store/dashboard-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface ListWidgetProps {
-  config: WidgetConfig;
+export interface ListWidgetProps {
+  widgetId: string;
   className?: string;
 }
 
@@ -215,92 +217,101 @@ const ListDisplay = React.memo<{ data: ListData[] }>(({ data }) => (
 ListDisplay.displayName = "ListDisplay";
 
 // Main component
-export const ListWidget = React.memo<ListWidgetProps>(
-  ({ config, className }) => {
-    const {
-      data: metricData,
-      isLoading,
-      error,
-    } = useMetricData({
-      dataSource: config.dataSource,
-      metricId: config.metricId || "top_vendor",
-      refreshInterval: config.refreshInterval || 60,
-    });
+export function ListWidget({ widgetId, className }: ListWidgetProps) {
+  const config = useDashboardStore((state) =>
+    state.dashboard?.widgets.find((w) => w.id === widgetId)
+  );
 
-    // Transform data to list format with memoization
-    const listData = React.useMemo(() => {
-      if (metricData?.list) {
-        return metricData.list;
-      }
+  if (!config) {
+    return <Skeleton className={cn("h-full w-full", className)} />;
+  }
 
-      if (metricData?.distribution) {
-        return transformDistributionToList(metricData.distribution);
-      }
+  const {
+    data: metricData,
+    isLoading: metricLoading,
+    error: metricError,
+  } = useMetricData({
+    dataSource: config.dataSource,
+    metricId: config.metricId,
+    refreshInterval: config.refreshInterval,
+    enabled: !!config,
+  });
 
-      return null;
-    }, [metricData]);
+  // Transform data to list format with memoization
+  const listData = React.useMemo(() => {
+    if (metricData?.list) {
+      return metricData.list;
+    }
 
-    // Memoize header props
-    const headerProps = React.useMemo(
-      () => ({
-        title: config.title,
-        description: config.description,
-      }),
-      [config.title, config.description]
-    );
+    if (metricData?.distribution) {
+      return transformDistributionToList(metricData.distribution);
+    }
 
-    return (
-      <Card className={cn("w-full h-full flex flex-col", className)}>
-        <WidgetHeader {...headerProps} />
-        <CardContent className="p-4 flex-1 flex flex-col min-h-0">
-          {/* Always show loading state initially */}
-          {isLoading && (
-            <div className="flex-1 min-h-0">
-              <ListSkeleton />
-            </div>
-          )}
+    return null;
+  }, [metricData]);
 
-          {/* Show error state */}
-          {!isLoading && error && (
-            <div className="flex-1 min-h-0">
-              <ListError />
-            </div>
-          )}
+  // Memoize header props
+  const headerProps = React.useMemo(
+    () => ({
+      title: config.title,
+      description: config.description,
+    }),
+    [config.title, config.description]
+  );
 
-          {/* Show data when available */}
-          {!isLoading && !error && listData && listData.length > 0 && (
-            <div className="flex-1 min-h-0">
-              <ListDisplay data={listData} />
-            </div>
-          )}
+  return (
+    <Card className={cn("w-full h-full flex flex-col", className)}>
+      <WidgetHeader {...headerProps} />
+      <CardContent className="p-4 flex-1 flex flex-col min-h-0">
+        {/* Always show loading state initially */}
+        {metricLoading && (
+          <div className="flex-1 min-h-0">
+            <ListSkeleton />
+          </div>
+        )}
 
-          {/* Show empty state when no data */}
-          {!isLoading && !error && (!listData || listData.length === 0) && (
+        {/* Show error state */}
+        {!metricLoading && metricError && (
+          <div className="flex-1 min-h-0">
+            <ListError />
+          </div>
+        )}
+
+        {/* Show data when available */}
+        {!metricLoading && !metricError && listData && listData.length > 0 && (
+          <div className="flex-1 min-h-0">
+            <ListDisplay data={listData} />
+          </div>
+        )}
+
+        {/* Show empty state when no data */}
+        {!metricLoading &&
+          !metricError &&
+          (!listData || listData.length === 0) && (
             <div className="flex-1 min-h-0">
               <EmptyList config={config} />
             </div>
           )}
 
-          {/* Fallback state - should never happen but ensures something always renders */}
-          {!isLoading && !error && !listData && !metricData && (
-            <div className="flex-1 min-h-0 flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <div className="text-4xl opacity-50">⚠️</div>
-                <div className="space-y-1">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    Widget Loading Issue
-                  </span>
-                  <p className="text-xs text-muted-foreground/70">
-                    No data or loading state detected. Please refresh the page.
-                  </p>
-                </div>
+        {/* Fallback state - should never happen but ensures something always renders */}
+        {!metricLoading && !metricError && !listData && !metricData && (
+          <div className="flex-1 min-h-0 flex items-center justify-center">
+            <div className="text-center space-y-2">
+              <div className="text-4xl opacity-50">⚠️</div>
+              <div className="space-y-1">
+                <span className="text-sm font-medium text-muted-foreground">
+                  Widget Loading Issue
+                </span>
+                <p className="text-xs text-muted-foreground/70">
+                  No data or loading state detected. Please refresh the page.
+                </p>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  }
-);
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 ListWidget.displayName = "ListWidget";

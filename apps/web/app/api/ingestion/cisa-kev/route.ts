@@ -98,10 +98,10 @@ export async function POST() {
           vendorProject: vuln.vendorProject,
           product: vuln.product,
           vulnerabilityName: vuln.vulnerabilityName,
-          dateAdded,
+          dateAdded: dateAdded,
           shortDescription: vuln.shortDescription,
           requiredAction: vuln.requiredAction,
-          dueDate,
+          dueDate: dueDate,
           knownRansomwareCampaignUse: knownRansomwareUse,
           notes: vuln.notes || null,
         };

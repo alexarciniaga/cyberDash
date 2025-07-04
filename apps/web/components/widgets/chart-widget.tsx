@@ -27,9 +27,14 @@ import {
   Cell,
   Legend,
 } from "recharts";
+import { useDashboardStore } from "@/lib/store/dashboard-store";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/ui-utils";
+import { AlertTriangle } from "lucide-react";
+import { TimeSeriesPointExtended } from "@/lib/types";
 
-interface ChartWidgetProps {
-  config: WidgetConfig;
+export interface ChartWidgetProps {
+  widgetId: string;
   className?: string;
 }
 
@@ -283,15 +288,19 @@ VulnerabilityDetailsPanel.displayName = "VulnerabilityDetailsPanel";
 
 // Memoized vulnerability insights widget component
 const VulnerabilityInsightsWidget = React.memo<ChartWidgetProps>(
-  function VulnerabilityInsightsWidget({ config, className }) {
+  function VulnerabilityInsightsWidget({ widgetId, className }) {
+    const config = useDashboardStore((state) =>
+      state.dashboard?.widgets.find((w) => w.id === widgetId)
+    );
+
     const {
       data: metricData,
       isLoading,
       error,
     } = useMetricData({
-      dataSource: config.dataSource,
-      metricId: config.metricId || "total_count",
-      refreshInterval: config.refreshInterval || 60,
+      metricId: config?.metricId,
+      dataSource: config?.dataSource,
+      enabled: !!config,
     });
 
     const [hoveredDate, setHoveredDate] = React.useState<string | null>(null);
@@ -304,16 +313,15 @@ const VulnerabilityInsightsWidget = React.memo<ChartWidgetProps>(
     // Use cached hook for all vulnerabilities in the date range
     const {
       data: allVulnerabilities,
-      loading: loadingAllVulns,
+      isLoading: loadingAllVulns,
       error: vulnerabilityError,
-    } = useVulnerabilityData(
-      dateRange?.start || null,
-      dateRange?.end || null,
-      100 // Use the API maximum
-    );
+    } = useVulnerabilityData({
+      dataSource: "cisa",
+      enabled: !!dateRange,
+    });
 
     // Use cached hook for hovered date vulnerabilities
-    const { data: hoveredVulnerabilities, loading: loadingHovered } =
+    const { data: hoveredVulnerabilities, isLoading: loadingHovered } =
       useVulnerabilityDataForDate(hoveredDate, !!hoveredDate);
 
     const chartData = React.useMemo(() => {
@@ -321,8 +329,8 @@ const VulnerabilityInsightsWidget = React.memo<ChartWidgetProps>(
         return [];
       }
 
-      return metricData.timeseries.map((point) => {
-        if ("timestamp" in point && "value" in point && point.timestamp) {
+      return metricData.timeseries.map((point: TimeSeriesPointExtended) => {
+        if (point.timestamp && point.value) {
           return {
             name: new Date(point.timestamp).toLocaleDateString("en-US", {
               month: "short",
@@ -397,7 +405,7 @@ const VulnerabilityInsightsWidget = React.memo<ChartWidgetProps>(
           <CardHeader className="pb-2 flex-shrink-0">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium">
-                {config.title}
+                {config?.title}
               </CardTitle>
               <div className="drag-handle cursor-move p-1 hover:bg-muted/50 rounded transition-colors">
                 <GripVerticalIcon className="h-4 w-4 text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
@@ -423,7 +431,7 @@ const VulnerabilityInsightsWidget = React.memo<ChartWidgetProps>(
           <CardHeader className="pb-2 flex-shrink-0">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium">
-                {config.title}
+                {config?.title}
               </CardTitle>
               <div className="drag-handle cursor-move p-1 hover:bg-muted/50 rounded transition-colors">
                 <GripVerticalIcon className="h-4 w-4 text-muted-foreground/50 cursor-grab active:cursor-grabbing" />
@@ -446,8 +454,8 @@ const VulnerabilityInsightsWidget = React.memo<ChartWidgetProps>(
         <CardHeader className="pb-2 flex-shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium flex flex-col">
-              {config.title}
-              {config.description && (
+              {config?.title}
+              {config?.description && (
                 <span className="text-xs text-muted-foreground">
                   {config.description}
                 </span>
@@ -529,14 +537,29 @@ const VulnerabilityInsightsWidget = React.memo<ChartWidgetProps>(
 );
 VulnerabilityInsightsWidget.displayName = "VulnerabilityInsightsWidget";
 
-export const ChartWidget = React.memo<ChartWidgetProps>(function ChartWidget({
-  config,
-  className,
-}) {
+export function ChartWidget({ widgetId, className }: ChartWidgetProps) {
+  const config = useDashboardStore((state) =>
+    state.dashboard?.widgets.find((w) => w.id === widgetId)
+  );
+
+  const {
+    data: metricData,
+    isLoading,
+    error,
+  } = useMetricData({
+    metricId: config?.metricId,
+    dataSource: config?.dataSource,
+    enabled: !!config,
+  });
+
+  if (!config) {
+    return <Skeleton className={cn("h-full w-full", className)} />;
+  }
+
   // Use specialized vulnerability widget for CISA new vulnerabilities rate
   if (config.dataSource === "cisa" && config.metricId === "new_vulns_rate") {
     return (
-      <VulnerabilityInsightsWidget config={config} className={className} />
+      <VulnerabilityInsightsWidget widgetId={widgetId} className={className} />
     );
   }
 
@@ -545,20 +568,12 @@ export const ChartWidget = React.memo<ChartWidgetProps>(function ChartWidget({
     config.dataSource === "cisa" &&
     config.metricId === "product_distribution"
   ) {
-    return <ProductDistributionWidget config={config} className={className} />;
+    return (
+      <ProductDistributionWidget widgetId={widgetId} className={className} />
+    );
   }
 
   // Original chart widget for all other chart types
-  const {
-    data: metricData,
-    isLoading,
-    error,
-  } = useMetricData({
-    dataSource: config.dataSource,
-    metricId: config.metricId || "total_count",
-    refreshInterval: config.refreshInterval || 60,
-  });
-
   const chartData = React.useMemo(() => {
     // Handle distribution data (for product distribution, vendor breakdown, etc.)
     if (metricData?.distribution) {
@@ -623,9 +638,9 @@ export const ChartWidget = React.memo<ChartWidgetProps>(function ChartWidget({
       return [];
     }
 
-    return metricData.timeseries.map((point) => {
+    return metricData.timeseries.map((point: TimeSeriesPointExtended) => {
       // Handle different data formats from various APIs
-      if ("timestamp" in point && "value" in point && point.timestamp) {
+      if (point.timestamp && point.value) {
         // Standard timeseries format
         return {
           name: new Date(point.timestamp).toLocaleDateString("en-US", {
@@ -822,7 +837,7 @@ export const ChartWidget = React.memo<ChartWidgetProps>(function ChartWidget({
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {chartData.map((entry, index) => (
+                  {chartData.map((entry: any, index: number) => (
                     <Cell
                       key={`cell-${index}`}
                       fill={COLORS[index % COLORS.length]}
@@ -906,5 +921,4 @@ export const ChartWidget = React.memo<ChartWidgetProps>(function ChartWidget({
       </CardContent>
     </Card>
   );
-});
-ChartWidget.displayName = "ChartWidget";
+}

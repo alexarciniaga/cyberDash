@@ -9,9 +9,14 @@ import {
   useDateRange,
   getDateRangeDescription,
 } from "@/contexts/date-range-context";
+import { useDashboardStore } from "@/lib/store/dashboard-store";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { cn } from "@/lib/ui-utils";
+import { AlertTriangle } from "lucide-react";
 
-interface VendorCardWidgetProps {
-  config: WidgetConfig;
+export interface VendorCardWidgetProps {
+  widgetId: string;
   className?: string;
 }
 
@@ -151,66 +156,75 @@ const VendorDisplay = React.memo<{
 );
 VendorDisplay.displayName = "VendorDisplay";
 
-export const VendorCardWidget = React.memo<VendorCardWidgetProps>(
-  ({ config, className }) => {
-    const { dateRange } = useDateRange();
-    const {
-      data: metricData,
-      isLoading,
-      error,
-    } = useMetricData({
-      dataSource: config.dataSource,
-      metricId: config.metricId || "top_vendor",
-      refreshInterval: config.refreshInterval || 60,
-    });
+export function VendorCardWidget({
+  widgetId,
+  className,
+}: VendorCardWidgetProps) {
+  const config = useDashboardStore((state) =>
+    state.dashboard?.widgets.find((w) => w.id === widgetId)
+  );
 
-    // Memoize the date range description
-    const dateRangeDescription = React.useMemo(
-      () => getDateRangeDescription(dateRange),
-      [dateRange]
-    );
+  const { dateRange } = useDateRange();
+  const {
+    data: metricData,
+    isLoading,
+    error,
+  } = useMetricData({
+    metricId: config?.metricId,
+    dataSource: config?.dataSource,
+    enabled: !!config,
+  });
 
-    // Memoize vendor data to prevent unnecessary re-renders
-    const vendorData = React.useMemo(
-      () => ({
-        vendorName: metricData?.value?.label || "No data",
-        vulnerabilityCount: metricData?.value?.value ?? 0,
-        changePercent: metricData?.value?.changePercent ?? 0,
-        metadata: metricData?.metadata,
-      }),
-      [
-        metricData?.value?.label,
-        metricData?.value?.value,
-        metricData?.value?.changePercent,
-        metricData?.metadata,
-      ]
-    );
+  // Memoize the date range description
+  const dateRangeDescription = React.useMemo(
+    () => getDateRangeDescription(dateRange),
+    [dateRange]
+  );
 
-    // Memoize header props
-    const headerProps = React.useMemo(
-      () => ({
-        title: config.title,
-        description: config.description,
-      }),
-      [config.title, config.description]
-    );
+  // Memoize vendor data to prevent unnecessary re-renders
+  const vendorData = React.useMemo(
+    () => ({
+      vendorName: metricData?.value?.label || "No data",
+      vulnerabilityCount: metricData?.value?.value ?? 0,
+      changePercent: metricData?.value?.changePercent ?? 0,
+      metadata: metricData?.metadata,
+    }),
+    [
+      metricData?.value?.label,
+      metricData?.value?.value,
+      metricData?.value?.changePercent,
+      metricData?.metadata,
+    ]
+  );
 
-    return (
-      <Card className={`${className} h-full min-w-0 overflow-hidden`}>
-        <WidgetHeader {...headerProps} />
-        <CardContent className="pt-0 pb-3 min-w-0">
-          {isLoading && <LoadingSkeleton />}
-          {error && <ErrorState />}
-          {!isLoading && !error && (
-            <VendorDisplay
-              {...vendorData}
-              dateRangeDescription={dateRangeDescription}
-            />
-          )}
-        </CardContent>
-      </Card>
-    );
+  // Memoize header props
+  const headerProps = React.useMemo(
+    () => ({
+      title: config?.title || "Vendor Card",
+      description: config?.description,
+    }),
+    [config?.title, config?.description]
+  );
+
+  if (!config) {
+    return <Skeleton className={cn("h-full w-full", className)} />;
   }
-);
+
+  return (
+    <Card className={`${className} h-full min-w-0 overflow-hidden`}>
+      <WidgetHeader {...headerProps} />
+      <CardContent className="pt-0 pb-3 min-w-0">
+        {isLoading && <LoadingSkeleton />}
+        {error && <ErrorState />}
+        {!isLoading && !error && (
+          <VendorDisplay
+            {...vendorData}
+            dateRangeDescription={dateRangeDescription}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 VendorCardWidget.displayName = "VendorCardWidget";

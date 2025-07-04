@@ -131,7 +131,6 @@ export interface TimeSeriesPointExtended {
   high?: number;
   medium?: number;
   low?: number;
-  [key: string]: any; // Allow additional properties
 }
 
 export interface TableData {
@@ -203,7 +202,7 @@ export interface DashboardLayout {
   name: string;
   description?: string;
   isDefault?: boolean;
-  layout: GridLayoutItem[];
+  layout: { [key: string]: GridLayoutItem[] };
   widgets: WidgetConfig[];
   createdAt: string;
   updatedAt: string;
