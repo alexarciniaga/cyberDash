@@ -18,6 +18,7 @@ export const METRIC_CONFIGS: Record<string, MetricConfig> = {
     },
     metadata: {
       source: "cisa_kev",
+      displayType: "recent-additions", // Show recent additions instead of percentage
     },
   },
 
@@ -89,7 +90,7 @@ export const METRIC_CONFIGS: Record<string, MetricConfig> = {
   "cisa/due-date-compliance": {
     id: "cisa_kev_due_date_compliance",
     title: "CISA KEV Due Date Compliance",
-    description: "Vulnerabilities with due dates vs overdue",
+    description: "Percentage of vulnerabilities not approaching due date",
     type: "distribution",
     table: "cisa_kev",
     conditions: {
@@ -100,6 +101,7 @@ export const METRIC_CONFIGS: Record<string, MetricConfig> = {
     },
     metadata: {
       source: "cisa_kev",
+      displayType: "percentage",
     },
   },
 

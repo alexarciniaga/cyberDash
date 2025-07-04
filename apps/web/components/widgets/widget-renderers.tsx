@@ -54,33 +54,75 @@ function getDateRangeDescription(preset: string): string {
 export const MetricCardRenderer = React.memo<{
   data: any;
   dateRange: any;
-}>(({ data, dateRange }) => {
-  if (!data?.value) {
+  config?: any;
+}>(({ data, dateRange, config }) => {
+  // Handle special case: distribution data that should be displayed as percentage
+  const metricData = React.useMemo(() => {
+    // Check if this should be displayed as percentage (like due date compliance)
+    if (config?.metadata?.displayType === "percentage" && data?.distribution) {
+      const total = data.distribution.reduce(
+        (sum: number, item: any) => sum + (item.value || 0),
+        0
+      );
+      const compliant = data.distribution
+        .filter((item: any) => item.label !== "Overdue")
+        .reduce((sum: number, item: any) => sum + (item.value || 0), 0);
+
+      const percentage = total > 0 ? Math.round((compliant / total) * 100) : 0;
+
+      return {
+        value: percentage,
+        changePercent: 0, // No trend calculation for now
+        isPercentage: true,
+      };
+    }
+
+    // Regular counter data
+    if (data?.value) {
+      return {
+        value: data.value.value ?? 0,
+        changePercent: data.value.changePercent ?? 0,
+        isPercentage: false,
+      };
+    }
+
+    return null;
+  }, [data, config]);
+
+  if (!metricData) {
     return <EmptyState icon="📊" title="No metric data" />;
   }
 
-  const value = data.value.value ?? 0;
-  const changePercent = data.value.changePercent ?? 0;
   const dateRangeDescription = getDateRangeDescription(dateRange.preset);
 
   return (
     <div className="space-y-1.5">
       <div className="text-2xl font-bold tracking-tight leading-none">
-        {value.toLocaleString()}
+        {metricData.value.toLocaleString()}
+        {metricData.isPercentage ? "%" : ""}
       </div>
       <div className="space-y-0.5">
         <div className="flex items-center text-xs">
-          <span
-            className={`font-medium ${
-              changePercent >= 0 ? "text-emerald-600" : "text-red-600"
-            }`}
-          >
-            {changePercent >= 0 ? "+" : ""}
-            {changePercent.toFixed(1)}%
-          </span>
-          <span className="text-muted-foreground ml-1">
-            {dateRangeDescription}
-          </span>
+          {!metricData.isPercentage && (
+            <>
+              <span
+                className={`font-medium ${
+                  metricData.changePercent >= 0
+                    ? "text-emerald-600"
+                    : "text-red-600"
+                }`}
+              >
+                {metricData.changePercent >= 0 ? "+" : ""}
+                {metricData.changePercent.toFixed(1)}%
+              </span>
+              <span className="text-muted-foreground ml-1">
+                {dateRangeDescription}
+              </span>
+            </>
+          )}
+          {metricData.isPercentage && (
+            <span className="text-muted-foreground">compliance rate</span>
+          )}
         </div>
       </div>
     </div>
@@ -240,7 +282,28 @@ export const ListRenderer = React.memo<{
   data: any;
   config: any;
 }>(({ data, config }) => {
-  if (!data?.list || data.list.length === 0) {
+  // Transform data to list format if needed
+  const listData = React.useMemo(() => {
+    // If data already has list format, use it
+    if (data?.list && Array.isArray(data.list)) {
+      return data.list;
+    }
+
+    // If data has distribution format, transform it to list format
+    if (data?.distribution && Array.isArray(data.distribution)) {
+      return data.distribution.map((item: any, index: number) => ({
+        id: item.label || item.name || item.cve_id || `item-${index}`,
+        title: item.label || item.name || item.cve_id || "Unknown",
+        value: item.value || item.count || 0,
+        subtitle: item.metadata?.description || item.subtitle,
+        badge: item.badge,
+      }));
+    }
+
+    return [];
+  }, [data]);
+
+  if (!listData || listData.length === 0) {
     return (
       <EmptyState
         icon="📋"
@@ -253,7 +316,7 @@ export const ListRenderer = React.memo<{
   return (
     <ScrollArea className="h-full w-full">
       <div className="space-y-0 pr-4">
-        {data.list.map((item: any, index: number) => {
+        {listData.map((item: any, index: number) => {
           // Check if this is a CVE item or MITRE technique
           const isCVE = item.title?.startsWith("CVE-");
           const isMitreTechnique = /^T\d{4}(\.\d{3})?$/.test(item.id || "");
@@ -452,6 +515,87 @@ export const TableRenderer = React.memo<{
 });
 TableRenderer.displayName = "TableRenderer";
 
-// VendorCardRenderer - consolidated with MetricCardRenderer for better maintainability
-export const VendorCardRenderer = MetricCardRenderer;
+// VendorCardRenderer - displays top vendor information with name and count
+export const VendorCardRenderer = React.memo<{
+  data: any;
+  dateRange: any;
+}>(({ data, dateRange }) => {
+  // Handle both distribution data (top-vendor metric) and counter data
+  const vendorData = React.useMemo(() => {
+    if (
+      data?.distribution &&
+      Array.isArray(data.distribution) &&
+      data.distribution.length > 0
+    ) {
+      // Top vendor from distribution data
+      const topVendor = data.distribution[0];
+      return {
+        name: topVendor.label || topVendor.name || "Unknown Vendor",
+        count: topVendor.value || 0,
+        isDistribution: true,
+      };
+    }
+
+    if (data?.value) {
+      // Counter data format
+      return {
+        name: data.value.metadata?.name || "Unknown Vendor",
+        count: data.value.value || 0,
+        changePercent: data.value.changePercent || 0,
+        isDistribution: false,
+      };
+    }
+
+    return null;
+  }, [data]);
+
+  if (!vendorData) {
+    return <EmptyState icon="🏢" title="No vendor data" />;
+  }
+
+  const dateRangeDescription = getDateRangeDescription(dateRange.preset);
+
+  return (
+    <div className="space-y-2">
+      {/* Vendor Name - Prominent Display */}
+      <div className="space-y-1">
+        <div className="text-lg font-bold tracking-tight leading-tight text-primary">
+          {vendorData.name}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          Top Vendor by Vulnerabilities
+        </div>
+      </div>
+
+      {/* Count with optional trend */}
+      <div className="space-y-1">
+        <div className="text-2xl font-bold tracking-tight leading-none">
+          {vendorData.count.toLocaleString()}
+        </div>
+        <div className="flex items-center text-xs">
+          <span className="text-muted-foreground">vulnerabilities</span>
+          {!vendorData.isDistribution &&
+            vendorData.changePercent !== undefined && (
+              <>
+                <span className="mx-1 text-muted-foreground">•</span>
+                <span
+                  className={`font-medium ${
+                    vendorData.changePercent >= 0
+                      ? "text-emerald-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {vendorData.changePercent >= 0 ? "+" : ""}
+                  {vendorData.changePercent.toFixed(1)}%
+                </span>
+                <span className="text-muted-foreground ml-1">
+                  {dateRangeDescription}
+                </span>
+              </>
+            )}
+        </div>
+      </div>
+    </div>
+  );
+});
 VendorCardRenderer.displayName = "VendorCardRenderer";

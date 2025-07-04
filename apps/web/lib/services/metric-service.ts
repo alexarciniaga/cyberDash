@@ -26,6 +26,7 @@ export interface MetricConfig {
   conditions?: MetricQueryConditions;
   metadata?: {
     source: string;
+    displayType?: string;
     [key: string]: any;
   };
 }
@@ -220,45 +221,15 @@ export class MetricService {
     data: any,
     additionalMetadata: any = {}
   ) {
-    const responseConfig = {
-      id: config.id,
-      title: config.title,
-      description: config.description,
-      source: config.metadata?.source || "unknown",
-    };
-
-    switch (config.type) {
-      case "counter":
-      case "simple-counter":
-        return ResponseFormatter.formatCounterResponse(
-          responseConfig,
-          data,
-          additionalMetadata
-        );
-      case "distribution":
-        return ResponseFormatter.formatDistributionResponse(
-          responseConfig,
-          data,
-          additionalMetadata
-        );
-      case "timeseries":
-        return ResponseFormatter.formatTimeseriesResponse(
-          responseConfig,
-          data,
-          "day", // default interval
-          additionalMetadata
-        );
-      default:
-        return ResponseFormatter.formatGenericResponse(
-          data,
-          responseConfig.source,
-          additionalMetadata
-        );
-    }
+    return ResponseFormatter.formatGenericResponse(
+      data,
+      config.metadata?.source || "unknown",
+      additionalMetadata
+    );
   }
 
   /**
-   * Format error response using ResponseFormatter
+   * Format standardized error response
    */
   static formatError(message: string, error?: any, source: string = "unknown") {
     return ResponseFormatter.formatErrorResponse(message, error, source);

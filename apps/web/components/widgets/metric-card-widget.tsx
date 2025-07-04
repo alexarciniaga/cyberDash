@@ -17,8 +17,8 @@ export function MetricCardWidget({
 }: MetricCardWidgetProps) {
   return (
     <BaseWidget widgetId={widgetId} className={className} onDelete={onDelete}>
-      {({ data, dateRange }) => (
-        <MetricCardRenderer data={data} dateRange={dateRange} />
+      {({ data, dateRange, config }) => (
+        <MetricCardRenderer data={data} dateRange={dateRange} config={config} />
       )}
     </BaseWidget>
   );

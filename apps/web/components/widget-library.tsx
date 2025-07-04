@@ -220,7 +220,12 @@ export const WidgetLibrary = React.memo<WidgetLibraryProps>(
     return (
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" disabled={disabled}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            className="h-9"
+          >
             <PlusIcon className="h-4 w-4 mr-2" />
             Add Widget
           </Button>

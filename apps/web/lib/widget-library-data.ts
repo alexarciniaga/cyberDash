@@ -57,16 +57,16 @@ export const WIDGET_LIBRARY = {
     },
     {
       id: "cisa-vendor-leaderboard",
-      type: "list" as const,
+      type: "table" as const,
       title: "Vendor Leaderboard",
       description: "Top vendors by vulnerability count",
       dataSource: "cisa" as const,
       metricId: "vendor-breakdown",
       refreshInterval: getRefreshInterval("slow"),
-      category: "Lists",
-      icon: ListIcon,
-      searchTerms: ["cisa", "vendor", "leaderboard", "top", "ranking", "list"],
-      // Uses default list size: { w: 4, h: 4, minW: 3, minH: 3 }
+      category: "Tables",
+      icon: TableIcon,
+      searchTerms: ["cisa", "vendor", "leaderboard", "top", "ranking", "table"],
+      // Uses default table size: { w: 6, h: 5, minW: 4, minH: 4 }
     },
     {
       id: "cisa-due-date-compliance",
@@ -267,14 +267,14 @@ export const WIDGET_LIBRARY = {
     },
     {
       id: "mitre-top-techniques",
-      type: "list" as const,
+      type: "table" as const,
       title: "Most Versatile Techniques",
       description: "Techniques spanning multiple tactics and platforms",
       dataSource: "mitre" as const,
       metricId: "top-techniques",
       refreshInterval: getRefreshInterval("slow"), // MITRE data updates less frequently
-      category: "Lists",
-      icon: ListIcon,
+      category: "Tables",
+      icon: TableIcon,
       searchTerms: [
         "mitre",
         "top",
@@ -284,6 +284,7 @@ export const WIDGET_LIBRARY = {
         "tactic",
         "platform",
         "dangerous",
+        "table",
       ],
     },
   ],
