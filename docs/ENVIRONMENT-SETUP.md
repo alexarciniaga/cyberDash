@@ -23,13 +23,16 @@ cyberDash/
 
 Contains configuration shared across all apps:
 
-- **Database settings** - PostgreSQL connection details
+- **Database settings** - Supabase PostgreSQL connection details
 - **External API keys** - NVD, CISA, MITRE access tokens
-- **Infrastructure** - Docker, monitoring, shared services
+- **Supabase configuration** - Database and authentication setup
 
 ```env
-# Database Configuration
-DATABASE_URL=postgresql://postgres:password@localhost:5432/cyberdash
+# Supabase Database Configuration
+DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@[YOUR-PROJECT-REF].supabase.co:5432/postgres"
+SUPABASE_URL="https://[YOUR-PROJECT-REF].supabase.co"
+SUPABASE_ANON_KEY="[YOUR-ANON-KEY]"
+SUPABASE_SERVICE_ROLE_KEY="[YOUR-SERVICE-ROLE-KEY]"
 
 # External API Keys (optional for basic functionality)
 NVD_API_KEY=your-nvd-api-key-here
@@ -69,22 +72,62 @@ Next.js loads environment variables in this order (later files override earlier 
 
 ## 🚀 Setup Instructions
 
-### For New Developers (Quick Setup)
+### Option 1: Supabase Setup (Recommended)
+
+**Use this for:**
+
+- Production deployments
+- Team collaboration
+- When you want managed PostgreSQL
+- Authentication features (future)
 
 ```bash
 # 1. Clone repository
 git clone <repo> && cd cyberdash
 
-# 2. Copy root-level environment template (REQUIRED)
+# 2. Create Supabase project at https://supabase.com
+# 3. Copy environment template and configure Supabase
 cp .env.example .env.local
 
-# 3. Install dependencies and start
+# 4. Edit .env.local with your Supabase credentials
+# Replace [YOUR-PROJECT-REF], [YOUR-PASSWORD], [YOUR-ANON-KEY], etc.
+nano .env.local
+
+# 5. Install dependencies and setup database
+pnpm install
+cd apps/web && pnpm db:push && pnpm dev
+```
+
+### Option 2: Local Development with Docker
+
+**Use this for:**
+
+- Pure local development
+- Offline development
+- When you prefer self-hosted PostgreSQL
+
+```bash
+# 1. Clone repository
+git clone <repo> && cd cyberdash
+
+# 2. Copy environment template
+cp .env.example .env.local
+
+# 3. Update .env.local to use local PostgreSQL
+# DATABASE_URL="postgresql://postgres:password@localhost:5432/cyberdash"
+
+# 4. Install dependencies and start local database
 pnpm install
 docker compose up -d
 cd apps/web && pnpm db:push && pnpm dev
 ```
 
-**The `.env.local` file in the root directory contains all necessary defaults.**
+### Getting Supabase Credentials
+
+1. **Create Project**: Go to [supabase.com](https://supabase.com) and create a new project
+2. **Get Database URL**: Project Settings → Database → Connection string → URI
+3. **Get API Keys**: Project Settings → API → anon/public and service_role keys
+4. **Get JWT Secret**: Project Settings → API → JWT Secret
 
 ### For Custom Configuration
 
@@ -190,21 +233,24 @@ pnpm db:studio  # Should open database browser
 # docker-compose.yml uses these variables from root .env.local:
 environment:
   - POSTGRES_DB=cyberdash
-  - POSTGRES_USER=postgres  
+  - POSTGRES_USER=postgres
   - POSTGRES_PASSWORD=password
 ```
 
 ### Common Error Messages
 
 **"Database connection failed"**
+
 - Check DATABASE_URL format and database is running
 - Run `docker compose ps` to verify PostgreSQL container is up
 
-**"Port 3000 already in use"**  
+**"Port 3000 already in use"**
+
 - Change PORT in .env.local or kill existing process
 - Use `lsof -i :3000` to find process using port
 
 **"Environment variable not found"**
+
 - Check variable name spelling and case
 - Ensure .env.local exists in correct location
 - Restart development server
@@ -239,11 +285,13 @@ cp .env.example .env.local  # One file configures everything
 ## 🛡️ Security Best Practices
 
 ### Development
+
 - **Never commit** `.env.local` files
 - **Use sample values** in `.env.example` files
 - **Rotate API keys** periodically
 
 ### Production
+
 - **Use environment variables** instead of .env files
 - **Secure API keys** with proper access controls
 - **Monitor usage** of external API keys
