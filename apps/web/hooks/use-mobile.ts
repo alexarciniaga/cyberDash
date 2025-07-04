@@ -1,6 +1,8 @@
 import * as React from "react";
 
-const MOBILE_BREAKPOINT = 768;
+// Use md breakpoint (996px) to align with react-grid-layout standard breakpoints
+// This ensures mobile/desktop switching happens at the same point as grid layout changes
+const MOBILE_BREAKPOINT = 996;
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(

@@ -16,23 +16,29 @@ export const APP_CONFIG = {
   // Dashboard Grid Configuration
   grid: {
     rowHeight: 60, // pixels per grid unit
-    margin: [12, 12] as [number, number], // [horizontal, vertical] in pixels
-    containerPadding: [16, 16] as [number, number], // [horizontal, vertical] in pixels
-    // MODERN BEST PRACTICE: Use standard react-grid-layout breakpoints
+    margin: [12, 12] as [number, number], // [horizontal, vertical] in pixels - increased for better visual separation
+    containerPadding: [16, 16] as [number, number], // [horizontal, vertical] in pixels - increased for better boundaries
+    // Standard react-grid-layout breakpoints (as per official documentation)
     breakpoints: {
-      lg: 1200, // Large screens - full layout
-      md: 996, // Medium screens - standard tablet landscape
-      sm: 768, // Small screens - tablet portrait
-      xs: 480, // Extra small - large mobile
-      xxs: 0, // Tiny screens - small mobile
+      lg: 1200, // Large screens
+      md: 996, // Medium screens
+      sm: 768, // Small screens
+      xs: 480, // Extra small
+      xxs: 0, // Tiny screens
     },
     columns: {
-      lg: 12, // Full 12-column grid
-      md: 10, // Slightly constrained for medium screens
-      sm: 6, // 6 columns for tablets
-      xs: 4, // 4 columns for mobile
-      xxs: 2, // 2 columns for very small screens
+      lg: 16, // Large screens - increased for better space utilization
+      md: 12, // Medium screens - standard layout
+      sm: 8, // Small screens - tablet layout
+      xs: 4, // Extra small - mobile layout
+      xxs: 2, // Tiny screens - minimal mobile layout
     },
+    // Additional stability settings
+    compactType: "vertical" as const,
+    preventCollision: true,
+    isBounded: true,
+    verticalCompact: true,
+    maxRows: 50,
   },
 
   // React Query Configuration

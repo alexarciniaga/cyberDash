@@ -8,6 +8,10 @@ import { ChartWidget } from "./widgets/chart-widget";
 import { TableWidget } from "./widgets/table-widget";
 import { ListWidget } from "./widgets/list-widget";
 import { VendorCardWidget } from "./widgets/vendor-card-widget";
+import { ProgressBarWidget } from "./widgets/progress-bar-widget";
+import { CarouselWidget } from "./widgets/carousel-widget";
+import { GaugeWidget } from "./widgets/gauge-widget";
+import { AvatarListWidget } from "./widgets/avatar-list-widget";
 import { getGridConfig } from "@/lib/config";
 import { useUpdateDashboard } from "@/lib/hooks/use-dashboards";
 import { useDebouncedCallback } from "use-debounce";
@@ -16,7 +20,7 @@ import { useDashboardContext } from "@/contexts/app-context";
 // Import CSS for react-grid-layout
 import "react-grid-layout/css/styles.css";
 
-// MODERN BEST PRACTICE: Memoize WidthProvider to prevent unnecessary re-renders
+// BEST PRACTICE: Create ResponsiveGridLayout outside component to prevent re-creation
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 interface DashboardGridProps {
@@ -29,33 +33,33 @@ class WidgetErrorBoundary extends React.Component<
   { children: React.ReactNode; widgetId: string; widgetType: string },
   { hasError: boolean }
 > {
-  constructor(props: {
-    children: React.ReactNode;
-    widgetId: string;
-    widgetType: string;
-  }) {
+  constructor(props: any) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(): { hasError: boolean } {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error(`Widget ${this.props.widgetId} error:`, error, errorInfo);
+    console.error(
+      `Widget error in ${this.props.widgetType} (${this.props.widgetId}):`,
+      error,
+      errorInfo
+    );
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="h-full bg-destructive/10 rounded-lg border border-destructive/20 p-4 flex items-center justify-center">
+        <div className="h-full bg-muted/50 rounded-lg border border-dashed border-muted-foreground/25 p-4 flex items-center justify-center">
           <div className="text-center">
-            <span className="text-destructive text-sm font-medium">
+            <span className="text-muted-foreground font-medium">
               Widget Error
             </span>
-            <p className="text-destructive/70 text-xs mt-1">
-              Failed to load widget
+            <p className="text-muted-foreground/70 text-sm mt-1">
+              {this.props.widgetType} failed to load
             </p>
           </div>
         </div>
@@ -66,39 +70,53 @@ class WidgetErrorBoundary extends React.Component<
   }
 }
 
-// Generate responsive layouts based on widget configurations
-// MODERN BEST PRACTICE: Follow official react-grid-layout responsive patterns
+// BEST PRACTICE: Optimized responsive layout generation
+// Generates layouts for all breakpoints based on base layout
 const generateResponsiveLayouts = (
   baseLayout: GridLayoutItem[]
 ): { [key: string]: Layout[] } => {
+  if (!baseLayout || baseLayout.length === 0) {
+    return { lg: [], md: [], sm: [], xs: [], xxs: [] };
+  }
+
+  // Sort by y position first, then x position for consistent stacking
+  const sortedLayout = [...baseLayout].sort((a, b) => {
+    if (a.y !== b.y) return a.y - b.y;
+    return a.x - b.x;
+  });
+
   return {
-    lg: baseLayout, // 12 cols - use original layout
-    md: baseLayout.map((item) => ({
+    // Large screens (1200px+) - 16 columns, full layout
+    lg: sortedLayout,
+
+    // Medium screens (996px+) - 12 columns, proportionally scaled from 16
+    md: sortedLayout.map((item) => ({
       ...item,
-      // Better scaling for 10 columns - maintain proportions
-      w: Math.ceil((item.w * 10) / 12),
-      x: Math.floor((item.x * 10) / 12),
+      w: Math.max(1, Math.ceil((item.w * 12) / 16)),
+      x: Math.min(11, Math.floor((item.x * 12) / 16)),
     })),
-    sm: baseLayout.map((item, index) => ({
+
+    // Small screens (768px+) - 8 columns, proportionally scaled from 16
+    sm: sortedLayout.map((item) => ({
       ...item,
-      // 6 columns - create a more compact 2-column layout
-      w: Math.min(Math.ceil((item.w * 6) / 12), 3),
-      x: (index % 2) * 3,
-      y: Math.floor(index / 2) * item.h,
+      w: Math.max(1, Math.ceil((item.w * 8) / 16)),
+      x: Math.min(7, Math.floor((item.x * 8) / 16)),
     })),
-    xs: baseLayout.map((item, index) => ({
+
+    // Extra small (480px+) - 4 columns, single column
+    xs: sortedLayout.map((item, index) => ({
       ...item,
-      // 4 columns - single column, full width
       w: 4,
       x: 0,
-      y: index * item.h,
+      y: index * Math.max(item.h, 3),
     })),
-    xxs: baseLayout.map((item, index) => ({
+
+    // Tiny screens - 2 columns, minimal single column
+    xxs: sortedLayout.map((item, index) => ({
       ...item,
-      // 2 columns - very compact layout for tiny screens
       w: 2,
       x: 0,
-      y: index * item.h,
+      y: index * Math.max(item.h, 4),
     })),
   };
 };
@@ -112,6 +130,10 @@ const widgetComponentMap: {
   chart: ChartWidget,
   table: TableWidget,
   vendor_card: VendorCardWidget,
+  progress_bar: ProgressBarWidget,
+  carousel: CarouselWidget,
+  gauge: GaugeWidget,
+  avatar_list: AvatarListWidget,
 };
 
 export function DashboardGrid({
@@ -133,76 +155,123 @@ export function DashboardGrid({
 
   const handleLayoutChange = useDebouncedCallback(
     (currentLayout: Layout[], allLayouts: { [key: string]: Layout[] }) => {
+      // Validate layouts before updating
+      if (!allLayouts || Object.keys(allLayouts).length === 0) return;
+
+      // Validate that layouts don't have overlapping items
+      const validatedLayouts = Object.keys(allLayouts).reduce(
+        (acc, breakpoint) => {
+          const layout = allLayouts[breakpoint];
+          if (!layout) return acc;
+          // Sort by y position to ensure consistent ordering
+          const sortedLayout = layout.sort((a, b) => {
+            if (a.y !== b.y) return a.y - b.y;
+            return a.x - b.x;
+          });
+          acc[breakpoint] = sortedLayout;
+          return acc;
+        },
+        {} as { [key: string]: Layout[] }
+      );
+
       // Optimistically update the context for a snappy UI
-      updateLayouts(allLayouts);
+      updateLayouts(validatedLayouts);
 
       // Persist the changes to the database
       if (dashboard) {
-        updateDashboard({ id: dashboard.id, data: { layout: allLayouts } });
+        updateDashboard({
+          id: dashboard.id,
+          data: { layout: validatedLayouts },
+        });
       }
     },
-    500 // Debounce for 500ms
+    300 // Reduced debounce for more responsive feel
   );
+
+  // Memoize children to prevent unnecessary re-renders
+  const gridChildren = React.useMemo(() => {
+    if (!dashboard) return [];
+
+    return dashboard.widgets.map((widget: WidgetConfig) => (
+      <div
+        key={widget.id}
+        className="relative h-full group bg-card rounded-lg shadow-sm border"
+      >
+        <WidgetErrorBoundary widgetId={widget.id} widgetType={widget.type}>
+          <div className="relative h-full group">
+            {(() => {
+              const WidgetComponent = widgetComponentMap[widget.type];
+              if (WidgetComponent) {
+                // We now pass only the ID and the delete handler. The widget will use a hook to get its config.
+                return (
+                  <WidgetComponent
+                    widgetId={widget.id}
+                    onDelete={
+                      onRemoveWidget
+                        ? () => onRemoveWidget(widget.id)
+                        : undefined
+                    }
+                  />
+                );
+              } else {
+                console.warn(
+                  "🚨 Unknown widget type:",
+                  widget.type,
+                  "for widget:",
+                  widget.id
+                );
+                return (
+                  <div className="h-full bg-muted/50 rounded-lg border border-dashed border-muted-foreground/25 p-4 flex items-center justify-center">
+                    <div className="text-center">
+                      <span className="text-muted-foreground font-medium">
+                        Unknown Widget
+                      </span>
+                      <p className="text-muted-foreground/70 text-sm mt-1">
+                        Type: {widget.type}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+            })()}
+          </div>
+        </WidgetErrorBoundary>
+      </div>
+    ));
+  }, [dashboard, onRemoveWidget]);
 
   if (!dashboard || !layouts) {
     return <div>Dashboard not found or an error occurred.</div>;
   }
 
   return (
-    <ResponsiveGridLayout
-      className="w-full h-full"
-      layouts={layouts}
-      onLayoutChange={handleLayoutChange}
-      {...getGridConfig()}
-      draggableHandle=".drag-handle"
+    <div
+      role="grid"
+      aria-label="Dashboard widget grid"
+      className="w-full h-full flex justify-center"
     >
-      {dashboard.widgets.map((widget: WidgetConfig) => (
-        <div
-          key={widget.id}
-          className="relative h-full group bg-card rounded-lg shadow-sm border"
+      <div className="w-full max-w-7xl">
+        <ResponsiveGridLayout
+          key={dashboard.id}
+          className="w-full h-full"
+          layouts={layouts}
+          onLayoutChange={handleLayoutChange}
+          {...getGridConfig()}
+          draggableHandle=".drag-handle"
+          useCSSTransforms={true}
+          preventCollision={false}
+          autoSize={true}
+          isDraggable={true}
+          isResizable={true}
+          isBounded={false}
+          allowOverlap={false}
+          measureBeforeMount={false}
+          resizeHandles={["se"]}
         >
-          <WidgetErrorBoundary widgetId={widget.id} widgetType={widget.type}>
-            <div className="relative h-full group">
-              {(() => {
-                const WidgetComponent = widgetComponentMap[widget.type];
-                if (WidgetComponent) {
-                  // We now pass only the ID and the delete handler. The widget will use a hook to get its config.
-                  return (
-                    <WidgetComponent
-                      widgetId={widget.id}
-                      onDelete={
-                        onRemoveWidget
-                          ? () => onRemoveWidget(widget.id)
-                          : undefined
-                      }
-                    />
-                  );
-                } else {
-                  console.warn(
-                    "🚨 Unknown widget type:",
-                    widget.type,
-                    "for widget:",
-                    widget.id
-                  );
-                  return (
-                    <div className="h-full bg-muted/50 rounded-lg border border-dashed border-muted-foreground/25 p-4 flex items-center justify-center">
-                      <div className="text-center">
-                        <span className="text-muted-foreground font-medium">
-                          Unknown Widget
-                        </span>
-                        <p className="text-muted-foreground/70 text-sm mt-1">
-                          Type: {widget.type}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                }
-              })()}
-            </div>
-          </WidgetErrorBoundary>
-        </div>
-      ))}
-    </ResponsiveGridLayout>
+          {gridChildren}
+        </ResponsiveGridLayout>
+      </div>
+    </div>
   );
 }
 

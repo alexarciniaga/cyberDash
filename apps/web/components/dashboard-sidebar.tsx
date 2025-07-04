@@ -3,19 +3,9 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetFooter,
-} from "@/components/ui/sheet";
 import { DashboardLayout, WidgetConfig, GridLayoutItem } from "@/lib/types";
 import { CreateDashboardModal } from "@/components/create-dashboard-modal";
 import {
-  MenuIcon,
   PlusIcon,
   TrashIcon,
   LayoutDashboardIcon,
@@ -23,6 +13,21 @@ import {
   SettingsIcon,
 } from "lucide-react";
 import { cn } from "@/lib/ui-utils";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "./ui/sidebar";
 
 interface DashboardSidebarProps {
   dashboards?: DashboardLayout[];
@@ -40,195 +45,51 @@ interface DashboardSidebarProps {
   isDeleting?: boolean;
 }
 
-export function DashboardSidebar({
+function DashboardSidebarContent({
   dashboards = [],
   currentDashboard,
   onDashboardChange,
   onCreateNew,
-  onDelete,
   onDeleteCurrent,
   isCreating = false,
   isDeleting = false,
 }: DashboardSidebarProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
   const router = useRouter();
+  const { setOpenMobile } = useSidebar();
+
+  const handleDashboardClick = (dashboard: DashboardLayout) => {
+    onDashboardChange(dashboard);
+    setOpenMobile(false); // Close mobile sidebar when item is selected
+  };
 
   return (
     <>
-      {/* Desktop Sidebar Toggle */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        className="hidden lg:fixed top-4 left-4 z-50"
-      >
-        <MenuIcon className="h-4 w-4" />
-      </Button>
+      <SidebarHeader className="border-b">
+        <div className="px-2 py-2">
+          <h2 className="text-lg font-semibold">CyberDash</h2>
+          <p className="text-sm text-muted-foreground">Security Dashboards</p>
+        </div>
+      </SidebarHeader>
 
-      {/* Mobile Sheet Sidebar */}
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        {/* Mobile Menu Trigger */}
-        <SheetTrigger asChild>
-          <Button
-            variant="outline"
-            size="sm"
-            className="fixed top-6 right-4 z-50 lg:hidden"
-          >
-            <MenuIcon className="h-4 w-4" />
-          </Button>
-        </SheetTrigger>
-
-        <SheetContent
-          side="left"
-          className="w-64 max-w-[85vw] p-0 lg:relative lg:translate-x-0 lg:w-full"
-        >
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            <SheetHeader className="p-6 border-b">
-              <SheetTitle className="text-left">CyberDash</SheetTitle>
-              <SheetDescription className="text-left">
-                Security Dashboards
-              </SheetDescription>
-            </SheetHeader>
-
-            {/* Dashboard List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium text-muted-foreground">
-                  DASHBOARDS
-                </h3>
-              </div>
-
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Dashboards</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
               {dashboards.length === 0 ? (
-                <div className="text-center py-8 text-sm text-muted-foreground">
+                <div className="px-2 py-8 text-center text-sm text-muted-foreground">
                   No dashboards found
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {dashboards.map((dashboard) => (
-                    <div
-                      key={dashboard.id}
-                      className={cn(
-                        "flex items-center justify-between rounded-md px-3 py-2 text-sm cursor-pointer transition-colors",
-                        currentDashboard?.id === dashboard.id
-                          ? "bg-accent text-accent-foreground"
-                          : "hover:bg-accent/50"
-                      )}
-                      onClick={() => {
-                        onDashboardChange(dashboard);
-                        setIsOpen(false);
-                      }}
+                dashboards.map((dashboard) => (
+                  <SidebarMenuItem key={dashboard.id}>
+                    <SidebarMenuButton
+                      onClick={() => handleDashboardClick(dashboard)}
+                      isActive={currentDashboard?.id === dashboard.id}
+                      className="w-full justify-start"
                     >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <LayoutDashboardIcon className="h-4 w-4 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="font-medium truncate">
-                            {dashboard.name}
-                          </div>
-                          {dashboard.description && (
-                            <div className="text-xs text-muted-foreground truncate">
-                              {dashboard.description}
-                            </div>
-                          )}
-                        </div>
-                        {currentDashboard?.id === dashboard.id && (
-                          <ChevronRightIcon className="h-3 w-3 flex-shrink-0" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer Actions */}
-            <SheetFooter className="p-4 border-t space-y-2">
-              {currentDashboard && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={onDeleteCurrent}
-                  disabled={isDeleting}
-                  className="w-full"
-                >
-                  <TrashIcon className="h-4 w-4 mr-2" />
-                  {isDeleting ? "Deleting..." : "Delete Current"}
-                </Button>
-              )}
-
-              <CreateDashboardModal
-                onCreateDashboard={onCreateNew}
-                isCreating={isCreating}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isCreating}
-                  className="w-full"
-                >
-                  <PlusIcon className="h-4 w-4 mr-2" />
-                  {isCreating ? "Creating..." : "New Dashboard"}
-                </Button>
-              </CreateDashboardModal>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  router.push("/settings");
-                  setIsOpen(false);
-                }}
-                className="w-full"
-              >
-                <SettingsIcon className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
-            </SheetFooter>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Desktop Sidebar - Always visible on desktop */}
-      <div className="hidden lg:block fixed left-0 top-0 h-screen w-64 bg-background border-r border-border z-40">
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="p-6 border-b">
-            <div>
-              <h2 className="text-lg font-semibold">CyberDash</h2>
-              <p className="text-sm text-muted-foreground">
-                Security Dashboards
-              </p>
-            </div>
-          </div>
-
-          {/* Dashboard List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                DASHBOARDS
-              </h3>
-            </div>
-
-            {dashboards.length === 0 ? (
-              <div className="text-center py-8 text-sm text-muted-foreground">
-                No dashboards found
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {dashboards.map((dashboard) => (
-                  <div
-                    key={dashboard.id}
-                    className={cn(
-                      "flex items-center justify-between rounded-md px-3 py-2 text-sm cursor-pointer transition-colors",
-                      currentDashboard?.id === dashboard.id
-                        ? "bg-accent text-accent-foreground"
-                        : "hover:bg-accent/50"
-                    )}
-                    onClick={() => onDashboardChange(dashboard)}
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <LayoutDashboardIcon className="h-4 w-4 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
+                      <LayoutDashboardIcon className="h-4 w-4" />
+                      <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">
                           {dashboard.name}
                         </div>
@@ -239,57 +100,85 @@ export function DashboardSidebar({
                         )}
                       </div>
                       {currentDashboard?.id === dashboard.id && (
-                        <ChevronRightIcon className="h-3 w-3 flex-shrink-0" />
+                        <ChevronRightIcon className="h-3 w-3 ml-auto" />
                       )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
 
-          {/* Footer Actions */}
-          <div className="p-4 border-t space-y-2">
-            {currentDashboard && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={onDeleteCurrent}
-                disabled={isDeleting}
-                className="w-full"
-              >
-                <TrashIcon className="h-4 w-4 mr-2" />
-                {isDeleting ? "Deleting..." : "Delete Current"}
-              </Button>
-            )}
-
-            <CreateDashboardModal
-              onCreateDashboard={onCreateNew}
-              isCreating={isCreating}
+      <SidebarFooter className="border-t">
+        <div className="p-2 space-y-2">
+          {currentDashboard && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={onDeleteCurrent}
+              disabled={isDeleting}
+              className="w-full"
             >
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isCreating}
-                className="w-full"
-              >
-                <PlusIcon className="h-4 w-4 mr-2" />
-                {isCreating ? "Creating..." : "New Dashboard"}
-              </Button>
-            </CreateDashboardModal>
+              <TrashIcon className="h-4 w-4 mr-2" />
+              {isDeleting ? "Deleting..." : "Delete Current"}
+            </Button>
+          )}
 
+          <CreateDashboardModal
+            onCreateDashboard={onCreateNew}
+            isCreating={isCreating}
+          >
             <Button
               variant="outline"
               size="sm"
-              onClick={() => router.push("/settings")}
+              disabled={isCreating}
               className="w-full"
             >
-              <SettingsIcon className="h-4 w-4 mr-2" />
-              Settings
+              <PlusIcon className="h-4 w-4 mr-2" />
+              {isCreating ? "Creating..." : "New Dashboard"}
             </Button>
-          </div>
+          </CreateDashboardModal>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              router.push("/settings");
+              setOpenMobile(false);
+            }}
+            className="w-full"
+          >
+            <SettingsIcon className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
         </div>
-      </div>
+      </SidebarFooter>
     </>
   );
 }
+
+export function DashboardSidebar(props: DashboardSidebarProps) {
+  return (
+    <Sidebar collapsible="icon" className="border-r">
+      <DashboardSidebarContent {...props} />
+    </Sidebar>
+  );
+}
+
+export function DashboardSidebarProvider({
+  children,
+  ...props
+}: DashboardSidebarProps & { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <DashboardSidebar {...props} />
+        {children}
+      </div>
+    </SidebarProvider>
+  );
+}
+
+export { SidebarTrigger };

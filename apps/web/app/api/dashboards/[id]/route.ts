@@ -28,7 +28,18 @@ const UpdateDashboardSchema = z.object({
     .array(
       z.object({
         id: z.string(),
-        type: z.enum(["metric_card", "chart", "table", "list", "vendor_card"]),
+        type: z.enum([
+          "metric_card",
+          "chart",
+          "table",
+          "list",
+          "vendor_card",
+          "progress_bar",
+          "carousel",
+          "avatar_list",
+          "gauge",
+          "heatmap",
+        ]),
         title: z.string(),
         description: z.string().optional(),
         dataSource: z.enum(["cisa", "nvd", "mitre"]),
@@ -45,7 +56,18 @@ const UpdateDashboardSchema = z.object({
 // Widget configuration schema
 const WidgetConfigSchema = z.object({
   id: z.string(),
-  type: z.enum(["metric_card", "chart", "table", "list", "vendor_card"]),
+  type: z.enum([
+    "metric_card",
+    "chart",
+    "table",
+    "list",
+    "vendor_card",
+    "progress_bar",
+    "carousel",
+    "avatar_list",
+    "gauge",
+    "heatmap",
+  ]),
   title: z.string(),
   description: z.string().optional(),
   dataSource: z.enum(["cisa", "nvd", "mitre"]),

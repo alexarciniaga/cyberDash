@@ -3,7 +3,11 @@
 import * as React from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { DashboardGrid } from "@/components/dashboard-grid";
-import { DashboardSidebar } from "@/components/dashboard-sidebar";
+import {
+  DashboardSidebarProvider,
+  SidebarTrigger,
+} from "@/components/dashboard-sidebar";
+import { SidebarInset } from "@/components/ui/sidebar";
 import { WidgetLibrary } from "@/components/widget-library";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { EditableTitle } from "@/components/editable-title";
@@ -152,16 +156,6 @@ function PageContent() {
     [createDashboard, updateUrlDashboardId]
   );
 
-  // Simple handler for sidebar (creates with default template)
-  const handleCreateNewDashboardSimple = React.useCallback(async () => {
-    await handleCreateNewDashboard({
-      name: `Dashboard ${(dashboards?.length || 0) + 1}`,
-      description: "Customize this dashboard with your preferred widgets",
-      widgets: sampleDashboardTemplate.widgets,
-      layout: generateSampleLayout(),
-    });
-  }, [handleCreateNewDashboard, dashboards]);
-
   // Handle deleting current dashboard
   const handleDeleteCurrentDashboard = React.useCallback(async () => {
     if (!currentDashboard) return;
@@ -176,8 +170,6 @@ function PageContent() {
       await deleteDashboard.mutateAsync(currentDashboard.id);
       setCurrentDashboard(undefined);
       updateUrlDashboardId(null);
-
-      // No need to reload - the UI will automatically show the empty state if no dashboards remain
     } catch (error) {
       console.error("Failed to delete dashboard:", error);
       alert("Failed to delete dashboard. Please try again.");
@@ -402,23 +394,24 @@ function PageContent() {
     }
   }, [currentDashboard, updateDashboard]);
 
-  // Removed auto-generation of default dashboard - users should manually create dashboards
-
   if (dashboardsLoading || defaultLoading) {
     return (
-      <div className="min-h-screen bg-background flex">
-        <DashboardSidebar
-          dashboards={[]}
-          currentDashboard={undefined}
-          onDashboardChange={() => {}}
-          onCreateNew={() => {}}
-          onDelete={() => {}}
-          onDeleteCurrent={() => {}}
-          isCreating={false}
-          isDeleting={false}
-        />
-        <div className="flex-1 lg:ml-64">
-          <div className="container mx-auto p-6 lg:pl-8 xl:pl-12">
+      <DashboardSidebarProvider
+        dashboards={[]}
+        currentDashboard={undefined}
+        onDashboardChange={() => {}}
+        onCreateNew={() => {}}
+        onDelete={() => {}}
+        onDeleteCurrent={() => {}}
+        isCreating={false}
+        isDeleting={false}
+      >
+        <SidebarInset>
+          <div className="flex h-16 shrink-0 items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <div className="h-4 bg-muted rounded w-32 animate-pulse"></div>
+          </div>
+          <div className="flex-1 space-y-4 p-4 md:p-6">
             <div className="animate-pulse space-y-6">
               <div className="h-8 bg-muted rounded w-48"></div>
               <div className="h-4 bg-muted rounded w-96"></div>
@@ -429,185 +422,102 @@ function PageContent() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </SidebarInset>
+      </DashboardSidebarProvider>
     );
   }
 
   return (
     <AppProvider initialDashboard={currentDashboard}>
-      <div className="min-h-screen bg-background flex">
-        <DashboardSidebar
-          dashboards={dashboards}
-          currentDashboard={currentDashboard}
-          onDashboardChange={handleDashboardChange}
-          onCreateNew={handleCreateNewDashboard}
-          onDelete={handleDeleteDashboard}
-          onDeleteCurrent={handleDeleteCurrentDashboard}
-          isCreating={createDashboard.isPending}
-          isDeleting={deleteDashboard.isPending}
-        />
-
-        <div className="flex-1 lg:ml-64">
-          <div className="container mx-auto p-6 lg:pl-8 xl:pl-12">
-            {/* Mobile Header */}
-            <div className="mb-6 lg:hidden pl-4">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div className="min-w-0 flex-1">
-                  {currentDashboard ? (
-                    <EditableTitle
-                      title={currentDashboard.name}
-                      onSave={handleUpdateTitle}
-                      variant="mobile"
-                      disabled={updateDashboard.isPending}
-                      placeholder="Dashboard name..."
-                    />
-                  ) : (
-                    <h1 className="text-2xl font-bold tracking-tight">
-                      CyberDash
+      <DashboardSidebarProvider
+        dashboards={dashboards}
+        currentDashboard={currentDashboard}
+        onDashboardChange={handleDashboardChange}
+        onCreateNew={handleCreateNewDashboard}
+        onDelete={handleDeleteDashboard}
+        onDeleteCurrent={handleDeleteCurrentDashboard}
+        isCreating={createDashboard.isPending}
+        isDeleting={deleteDashboard.isPending}
+      >
+        <SidebarInset>
+          {/* Header */}
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b">
+            <div className="flex items-center gap-2 px-4 w-full">
+              <SidebarTrigger className="-ml-1" />
+              <div className="flex-1 min-w-0 mr-4">
+                {currentDashboard ? (
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                    <h1 className="text-lg font-semibold truncate">
+                      {currentDashboard.name}
                     </h1>
-                  )}
-                  {currentDashboard && (
-                    <EditableDescription
-                      description={currentDashboard.description}
-                      onSave={handleUpdateDescription}
-                      variant="mobile"
-                      disabled={updateDashboard.isPending}
-                      placeholder="Add dashboard description..."
-                      fallback="Click to add description"
-                    />
-                  )}
-                </div>
-                <div className="flex-shrink-0 flex gap-2">
-                  {currentDashboard && (
-                    <RefreshButton
-                      onRefresh={refresh}
-                      isRefreshing={isRefreshing}
-                      timeUntilNext={timeUntilNext}
-                      className="h-9"
-                    />
-                  )}
-                  <ThemeToggle />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      window.open(
-                        "https://github.com/alexarciniaga/cyberDash/tree/main/docs",
-                        "_blank"
-                      )
-                    }
-                    className="h-9"
-                    title="Open documentation on GitHub"
-                  >
-                    <BookOpenIcon className="h-4 w-4" />
-                  </Button>
-                  {currentDashboard && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleResetLayout}
-                        disabled={updateDashboard.isPending}
-                        className="h-9"
-                      >
-                        <RotateCcwIcon className="h-4 w-4" />
-                      </Button>
-                      <WidgetLibrary
-                        currentWidgets={currentDashboard.widgets}
-                        onAddWidget={handleAddWidget}
-                        disabled={updateDashboard.isPending}
-                      />
-                    </>
-                  )}
-                </div>
+                    {currentDashboard.description && (
+                      <span className="text-sm text-muted-foreground truncate">
+                        {currentDashboard.description}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <h1 className="text-lg font-semibold">CyberDash</h1>
+                )}
               </div>
-              <DateRangePicker className="max-w-sm" />
-            </div>
-
-            {/* Desktop Header */}
-            <div className="hidden lg:block mb-6 lg:ml-[16px]">
-              <div className="flex items-start justify-between">
-                <div>
-                  {currentDashboard ? (
-                    <EditableTitle
-                      title={currentDashboard.name}
-                      onSave={handleUpdateTitle}
-                      variant="desktop"
-                      disabled={updateDashboard.isPending}
-                      placeholder="Dashboard name..."
-                    />
-                  ) : (
-                    <h1 className="text-3xl font-bold tracking-tight">
-                      CyberDash
-                    </h1>
-                  )}
-                  {currentDashboard ? (
-                    <EditableDescription
-                      description={currentDashboard.description}
-                      onSave={handleUpdateDescription}
-                      variant="desktop"
-                      disabled={updateDashboard.isPending}
-                      placeholder="Add dashboard description..."
-                      fallback="Cybersecurity metrics dashboard with real-time threat intelligence"
-                    />
-                  ) : (
-                    <p className="text-muted-foreground">
-                      Cybersecurity metrics dashboard with real-time threat
-                      intelligence
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-start gap-4">
-                  <DateRangePicker />
-                  {currentDashboard && (
-                    <RefreshButton
-                      onRefresh={refresh}
-                      isRefreshing={isRefreshing}
-                      timeUntilNext={timeUntilNext}
-                      className="h-9"
-                    />
-                  )}
-                  <ThemeToggle />
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      window.open(
-                        "https://github.com/alexarciniaga/cyberDash/tree/main/docs",
-                        "_blank"
-                      )
-                    }
+              <div className="flex items-center gap-2 shrink-0">
+                {currentDashboard && (
+                  <RefreshButton
+                    onRefresh={refresh}
+                    isRefreshing={isRefreshing}
+                    timeUntilNext={timeUntilNext}
                     className="h-9"
-                    title="Open documentation on GitHub"
-                  >
-                    <BookOpenIcon className="h-4 w-4 mr-2" />
-                    Docs
-                  </Button>
-                  {currentDashboard && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleResetLayout}
-                        disabled={updateDashboard.isPending}
-                        className="h-9"
-                        title="Reset layout to default organization"
-                      >
-                        <RotateCcwIcon className="h-4 w-4 mr-2" />
-                        Reset Layout
-                      </Button>
-                      <WidgetLibrary
-                        currentWidgets={currentDashboard.widgets}
-                        onAddWidget={handleAddWidget}
-                        disabled={updateDashboard.isPending}
-                      />
-                    </div>
-                  )}
-                </div>
+                  />
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    window.open(
+                      "https://github.com/alexarciniaga/cyberDash/tree/main/docs",
+                      "_blank"
+                    )
+                  }
+                  className="h-9 w-9 p-0"
+                  title="Open documentation on GitHub"
+                >
+                  <BookOpenIcon className="h-4 w-4" />
+                </Button>
+                <ThemeToggle />
               </div>
             </div>
+          </header>
 
+          {/* Main Content */}
+          <div className="flex-1 space-y-4 p-2 md:p-4 lg:p-6 xl:p-8">
+            {/* Controls Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <DateRangePicker />
+              </div>
+              {currentDashboard && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetLayout}
+                    disabled={updateDashboard.isPending}
+                    className="h-9"
+                    title="Reset layout to default organization"
+                  >
+                    <RotateCcwIcon className="h-4 w-4 mr-2" />
+                    Reset Layout
+                  </Button>
+                  <WidgetLibrary
+                    currentWidgets={currentDashboard.widgets}
+                    onAddWidget={handleAddWidget}
+                    disabled={updateDashboard.isPending}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Dashboard Content */}
             {currentDashboard ? (
               <>
                 <DashboardGrid
@@ -646,8 +556,8 @@ function PageContent() {
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </SidebarInset>
+      </DashboardSidebarProvider>
     </AppProvider>
   );
 }

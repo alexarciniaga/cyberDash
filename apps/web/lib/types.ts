@@ -180,7 +180,17 @@ export interface GridLayoutItem {
 
 export interface WidgetConfig {
   id: string;
-  type: "metric_card" | "chart" | "table" | "list" | "vendor_card";
+  type:
+    | "metric_card"
+    | "chart"
+    | "table"
+    | "list"
+    | "vendor_card"
+    | "progress_bar"
+    | "carousel"
+    | "avatar_list"
+    | "gauge"
+    | "heatmap";
   title: string;
   description?: string;
   dataSource: "cisa" | "nvd" | "mitre";

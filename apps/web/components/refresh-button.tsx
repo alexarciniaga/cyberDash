@@ -27,11 +27,13 @@ export function RefreshButton({
       title={`Refresh dashboard data${timeUntilNext ? ` (auto-refresh in ${timeUntilNext}s)` : ""}`}
     >
       <RefreshCwIcon
-        className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+        className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
       />
-      {isRefreshing
-        ? "Refreshing..."
-        : `Refresh${timeUntilNext ? ` (${timeUntilNext}s)` : ""}`}
+      <span className="ml-2 hidden sm:inline">
+        {isRefreshing
+          ? "Refreshing..."
+          : `Refresh${timeUntilNext ? ` (${timeUntilNext}s)` : ""}`}
+      </span>
     </Button>
   );
 }

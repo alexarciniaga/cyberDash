@@ -18,13 +18,18 @@ export interface ExtendedWidgetConfig extends WidgetConfig {
   searchTerms: string[];
 }
 
-// Default widget sizes by type (used as fallbacks)
+// Default widget sizes by type (used as fallbacks) - Updated for 16-column grid
 export const DEFAULT_WIDGET_TYPE_SIZES = {
-  metric_card: { w: 3, h: 3, minW: 2, minH: 3 },
-  vendor_card: { w: 3, h: 3, minW: 2, minH: 3 },
-  chart: { w: 6, h: 5, minW: 4, minH: 5 },
-  table: { w: 6, h: 5, minW: 4, minH: 4 },
-  list: { w: 4, h: 4, minW: 3, minH: 3 },
+  metric_card: { w: 4, h: 3, minW: 3, minH: 3 },
+  vendor_card: { w: 4, h: 3, minW: 3, minH: 3 },
+  chart: { w: 8, h: 5, minW: 6, minH: 5 },
+  table: { w: 8, h: 5, minW: 6, minH: 4 },
+  list: { w: 5, h: 4, minW: 4, minH: 3 },
+  progress_bar: { w: 5, h: 8, minW: 4, minH: 8 },
+  carousel: { w: 8, h: 5, minW: 6, minH: 5 },
+  gauge: { w: 4, h: 6, minW: 4, minH: 6 },
+  avatar_list: { w: 5, h: 5, minW: 4, minH: 4 },
+  heatmap: { w: 8, h: 5, minW: 6, minH: 4 },
 } as const;
 
 export const WIDGET_LIBRARY = {
@@ -123,6 +128,42 @@ export const WIDGET_LIBRARY = {
       searchTerms: ["cisa", "product", "distribution", "chart", "pie"],
       // Uses default chart size: { w: 6, h: 5, minW: 4, minH: 5 }
     },
+    {
+      id: "cisa-vendor-progress",
+      type: "progress_bar" as const,
+      title: "Vendor Vulnerability Progress",
+      description: "Progress bars showing vulnerability distribution by vendor",
+      dataSource: "cisa" as const,
+      metricId: "vendor-breakdown",
+      refreshInterval: getRefreshInterval("normal"),
+      category: "Charts",
+      icon: GaugeIcon,
+      searchTerms: ["cisa", "vendor", "progress", "bar", "distribution"],
+    },
+    {
+      id: "cisa-compliance-gauge",
+      type: "gauge" as const,
+      title: "Compliance Gauge",
+      description: "Circular gauge showing due date compliance percentage",
+      dataSource: "cisa" as const,
+      metricId: "due-date-compliance",
+      refreshInterval: getRefreshInterval("fast"),
+      category: "Metrics",
+      icon: GaugeIcon,
+      searchTerms: ["cisa", "compliance", "gauge", "due", "date", "circular"],
+    },
+    {
+      id: "cisa-vendor-carousel",
+      type: "carousel" as const,
+      title: "Vendor Carousel",
+      description: "Scrollable cards showing vendor vulnerability counts",
+      dataSource: "cisa" as const,
+      metricId: "vendor-breakdown",
+      refreshInterval: getRefreshInterval("normal"),
+      category: "Charts",
+      icon: Activity,
+      searchTerms: ["cisa", "vendor", "carousel", "cards", "scrollable"],
+    },
   ],
   "NVD CVE": [
     {
@@ -188,6 +229,30 @@ export const WIDGET_LIBRARY = {
       category: "Tables",
       icon: TableIcon,
       searchTerms: ["nvd", "vulnerability", "status", "summary", "table"],
+    },
+    {
+      id: "nvd-severity-progress",
+      type: "progress_bar" as const,
+      title: "Severity Progress Bars",
+      description: "Progress visualization of CVE severity distribution",
+      dataSource: "nvd" as const,
+      metricId: "severity-distribution",
+      refreshInterval: getRefreshInterval("normal"),
+      category: "Charts",
+      icon: GaugeIcon,
+      searchTerms: ["nvd", "severity", "progress", "distribution", "bars"],
+    },
+    {
+      id: "nvd-recent-activity",
+      type: "avatar_list" as const,
+      title: "Recent CVE Activity",
+      description: "Avatar list showing recent high severity CVEs",
+      dataSource: "nvd" as const,
+      metricId: "recent-high-severity",
+      refreshInterval: getRefreshInterval("fast"),
+      category: "Lists",
+      icon: Activity,
+      searchTerms: ["nvd", "recent", "activity", "avatars", "cve", "high"],
     },
   ],
   "MITRE ATT&CK": [
@@ -313,6 +378,28 @@ export const WIDGET_TYPE_INFO = {
     icon: ListIcon,
     color:
       "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300",
+  },
+  progress_bar: {
+    icon: GaugeIcon,
+    color:
+      "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+  },
+  carousel: {
+    icon: Activity,
+    color: "bg-pink-100 text-pink-700 dark:bg-pink-900 dark:text-pink-300",
+  },
+  gauge: {
+    icon: GaugeIcon,
+    color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300",
+  },
+  avatar_list: {
+    icon: Activity,
+    color:
+      "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300",
+  },
+  heatmap: {
+    icon: BarChart3Icon,
+    color: "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300",
   },
 };
 

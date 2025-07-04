@@ -17,8 +17,8 @@ export function VendorCardWidget({
 }: VendorCardWidgetProps) {
   return (
     <BaseWidget widgetId={widgetId} className={className} onDelete={onDelete}>
-      {({ data, dateRange }) => (
-        <VendorCardRenderer data={data} dateRange={dateRange} />
+      {({ data, dateRange, config }) => (
+        <VendorCardRenderer data={data} dateRange={dateRange} config={config} />
       )}
     </BaseWidget>
   );
