@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1751503927062,
+      "tag": "0000_productive_gladiator",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1751506025712,
+      "tag": "0001_public_stature",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1751509202126,
+      "tag": "0002_fair_sunset_bain",
+      "breakpoints": true
+    }
+  ]
+}
