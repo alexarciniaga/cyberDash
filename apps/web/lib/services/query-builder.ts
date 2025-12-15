@@ -110,7 +110,6 @@ export class QueryBuilder {
       },
     };
   }
-
   /**
    * Build and execute a distribution query with percentages
    * Groups data by specified field and calculates percentages
